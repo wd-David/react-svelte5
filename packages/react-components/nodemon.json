@@ -1,0 +1,6 @@
+{
+  "watch": ["src", "vite.config.ts"],
+  "ignore": ["dist"],
+  "ext": "js, ts, jsx, tsx",
+  "exec": "npx vite build"
+}

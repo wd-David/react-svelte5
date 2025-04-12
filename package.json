@@ -1,0 +1,14 @@
+{
+  "name": "react-svelte5",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel dev",
+    "docker:start": "docker-compose down && set -o allexport; set +o allexport && docker image prune -f && docker-compose up --build -d > build.log 2>&1"
+  },
+  "packageManager": "pnpm@10.8.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}
