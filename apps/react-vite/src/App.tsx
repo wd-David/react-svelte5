@@ -22,7 +22,7 @@ function App() {
         <button onClick={() => setCount((count) => count + 1)}>
           React count is {count}
         </button>
-        <SvelteCounter initCount={count} />
+        <SvelteCounter initCount={0} />
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
