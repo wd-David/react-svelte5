@@ -1,8 +1,8 @@
-# A practical guide to try Svelte 5 in a React app
+# A Practical Guide to Trying Svelte 5 in a React App
 
-> and ending up migrating the whole app to SvelteKit
+> and Ending Up Migrating the Whole App to SvelteKit
 
-This blog post shares our journey at an small startup where we successfully migrated a core product from React to Svelte.
+This blog post shares our journey at a small startup where we successfully migrated the product from React to Svelte.
 
 In part one, I'll explain our decision-making process and how we communicated this technical shift to all stakeholders.
 
@@ -12,11 +12,13 @@ Jump to [part two](#part-2-migrate) if you only want to know how to migrate.
 
 Let's get started.
 
-## Part 1: Decision-making
+## Part 1: Decision-Making
 
 "Do not rewrite your product!" is a common piece of advice from seasoned product/tech leaders.
 
-"You don't understand! We have years of tech debts, we can replace x, y, z with a new library, performance can be improved by 30%, lighthouse scores can be improved by 20%, CI times can cut in half, development speed can be doubled, also..."
+No matter whether you're in a startup or a large company, business value is the ultimate metric for decision-making, especially at a profit center.
+
+"You don't understand! We have years of tech debt, we can replace x, y, z with a new library, performance can be improved by 30%, lighthouse scores can be improved by 20%, CI times can be cut in half, development speed can be doubled, also..."
 
 "Alright, how long will it take?"
 
@@ -26,13 +28,44 @@ Let's get started.
 
 If you've been in a similar situation, you might have already guessed the outcome of this conversation.
 
-No matter you're in a startup or a large company, business value is the ultimate metric for decision-making, especially at a profit center. As a tech leader, you know how undocumented legacy code can drag down the team's velocity, and how new features can be delayed or even canceled due to the unknowns.
+As a tech leader, you know how undocumented legacy code can drag down the team's velocity, and how new features can be delayed or even canceled due to the unknowns.
 
-On one side, your team complaining about shitty code written by Jason, who left the company before the current team joined. On the other side, your business team is pushing for more ad-hoc features and not satisfied with the quality of the product.
+On one side, your team is complaining about poorly written code written by Jason, who left the company before the current team joined. On the other side, your business team is pushing for more ad-hoc features and not satisfied with the quality of the product.
 
-Life is hard buddy. I've been there, and I know what you're going through.
+Life is hard, buddy. I've been there, and I know what you're going through.
 
-Back in mid-2024, we pulled the trigger and decided to incrementally migrate our product from a legacy React app to Svelte, and release a new version of the product in 2025 Q2.
+In mid-2024, we decided to embark on a gradual migration journey from a legacy React app to Svelte, with the goal of releasing a new version of the product in Q2 2025.
+
+### Why?
+
+- More than 50% of the React SPA is written in JavaScript without tests and documentation.
+- We are obsessed with DRY, which makes a simple component extremely complex to maintain.
+- Name an anti-pattern in React, and there is a high chance you'll see it in the codebase.
+- We have a hand-crafted design editor with poor performance (re-rendering excessively) utilizing SVGs, not the Canvas API.
+
+You can address the first three issues by refactoring the codebase (we tried our best in the last two years). However, the last issue, which is more inherent to React, makes it a less than ideal choice for a design editor.
+
+> Our editor is like Figma or Canva, but needs to support complex text formatting (different font, size, color, letter spacing, line height in one text box).
+
+### The React Rendering Challenge
+
+React's rendering model, while powerful for many applications, presented significant challenges for our design editor:
+
+1. **Virtual DOM Reconciliation**: React's reconciliation process compares the entire virtual DOM tree with its previous version to determine what needs to be updated. For a complex design editor with hundreds of elements, this process became expensive, especially during real-time editing.
+
+2. **Coarse-grained Updates**: React's component-based update model meant that even small changes to a text property could trigger re-renders of entire component trees. We tried various optimization techniques (memoization, `React.memo`, careful prop management), but still struggled with performance.
+
+3. **Batched State Updates**: React's batching of state updates sometimes made it difficult to achieve the precise, immediate feedback needed in a design tool where users expect pixel-perfect control.
+
+I've long dreamed of fine-grained reactivity, particularly when debugging the editor's issues and optimizing rendering performance. The introduction of runes in Svelte 5 has made this a reality.
+
+When Svelte 5 RC was released, I decided it was time to take the leap.
+
+<!-- To convince the team to try Svelte, I highlighted Svelte's unique selling points: its performance, concise syntax, and most importantly, the mental model shift that comes with Svelte.
+
+In React, a common concern is how to prevent unnecessary re-renders or recalculations. Svelte's approach to reactivity is distinct from React's, and it's easier to understand and work with.
+
+This is crucial when building a design editor, where precise control over rendering and performance is vital. -->
 
 ### Start with small bets
 
@@ -41,7 +74,7 @@ Back in mid-2024, we pulled the trigger and decided to incrementally migrate our
 
 - pnpm workspace
 - Vite-based React app
-  > or you can use `reactify` from [`svelte-preprocess-react`](https://github.com/bfanger/svelte-preprocess-react/tree/main) in a none-vite React app
+  > or you can use `reactify` from [`svelte-preprocess-react`](https://github.com/bfanger/svelte-preprocess-react/tree/main) in a non-Vite React app
 - Svelte 5 + SvelteKit 2
 
 #### React + Svelte 5 components
