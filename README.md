@@ -1,12 +1,12 @@
-# A Practical Guide to Trying Svelte 5 in a React App
+# We Heard You Like Svelte, So We Put Svelte in Your React App
 
-> and Ending Up Migrating the Whole App to SvelteKit
+> ...and Ending Up Migrating Everything to SvelteKit
 
-This blog post shares our journey at a small startup where we successfully migrated the product from React to Svelte.
+Ever have one of those “What if we just tried…” moments, only to find yourself months later on the other side of a full-blown migration? That’s exactly how we ended up swapping React for SvelteKit.
 
-In part one, I'll explain our decision-making process and how we communicated this technical shift to all stakeholders.
+This wasn’t a bold, all-in decision from day one. Our journey started with pure curiosity—a series of “let’s see if it works” experiments. We tried Svelte 5 in a React SPA, then pushed a little further, and a little further still. Each time, the answer was: “Hey, this actually works!” By the time we proved we could run React components inside SvelteKit, there was no turning back.
 
-In part two, I'll provide a detailed roadmap of our incremental migration: starting with a proof-of-concept integrating Svelte 5 into our React SPA, progressing to route-by-route migration, and ultimately transitioning the entire application to SvelteKit.
+This post is a chronicle of that trial-and-error adventure: the wins, the fails, and the real-world lessons from migrating a production app one experiment at a time. And in the end? The best tech choice might just be the one that keeps moving your business forward—especially in the AI era.
 
 Jump to [part two](#part-2-migrate) if you only want to know how to migrate.
 
@@ -39,7 +39,7 @@ In mid-2024, we decided to embark on a gradual migration journey from a legacy R
 ### Why?
 
 - More than 50% of the React SPA is written in JavaScript without tests and documentation.
-- We are obsessed with DRY, which makes a simple component extremely complex to maintain.
+- Obsessed with DRY, which makes a simple component extremely complex to maintain.
 - Name an anti-pattern in React, and there is a high chance you'll see it in the codebase.
 - We have a hand-crafted design editor with poor performance (re-rendering excessively) utilizing SVGs, not the Canvas API.
 
@@ -47,7 +47,7 @@ You can address the first three issues by refactoring the codebase (we tried our
 
 > Our editor is like Figma or Canva, but needs to support complex text formatting (different font, size, color, letter spacing, line height in one text box).
 
-### The React Rendering Challenge
+#### The React Rendering Challenge
 
 React's rendering model, while powerful for many applications, presented significant challenges for our design editor:
 
@@ -67,7 +67,27 @@ In React, a common concern is how to prevent unnecessary re-renders or recalcula
 
 This is crucial when building a design editor, where precise control over rendering and performance is vital. -->
 
-### Start with small bets
+### Start with Small Bets
+
+To ease back into Svelte (my last experience was with Svelte 3, pre-SvelteKit), I began by building a simple modal component. Modals are a great test case—they’re self-contained, but still touch on state, events, and styling.
+
+My goal was to get a feel for Svelte 5’s new syntax and see how smoothly it could be integrated into an existing React app. (If you want to jump straight to the integration details, see [React + Svelte 5 components](#prerequisites).)
+
+Once I had the modal working, I felt confident enough to migrate an entire route to Svelte, which really showcased how clean and expressive the new syntax is.
+
+#### Key Takeaways
+
+- Be honest about both the upsides and the challenges. Svelte 5’s ecosystem is still young, and you’ll need to improvise or adapt patterns from elsewhere.
+- Give your team time to adjust—switching mental models from React to Svelte takes practice.
+- Avoid overwhelming your project with too many changes at once. For example, I held off on introducing SvelteKit until the team was comfortable with Svelte itself.
+- Start with isolated components to minimize risk and maximize learning before scaling up.
+
+#### Tech Stack
+- React vite SPA
+- Redux (not redux toolkit) + Context API
+- Material UI 4 + CSS modules
+- Svelte 5
+- shadcn-svelte
 
 ## Part 2: Migrate
 ### Prerequisites
