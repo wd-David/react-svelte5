@@ -1,130 +1,191 @@
-# We Heard You Like Svelte, So We Put Svelte in Your React App
+# Incremental Migration of a Production React App to Svelte 5: A Practical Guide
 
-> ...and Ending Up Migrating Everything to SvelteKit
+Rewriting a production app is risky for any team, but especially for a small startup like ours with limited engineering resources. Yet sometimes, the right opportunity makes it worth considering.
 
-Ever have one of those “What if we just tried…” moments, only to find yourself months later on the other side of a full-blown migration? That’s exactly how we ended up swapping React for SvelteKit.
+We were already planning to rebuild our platform to better serve enterprise customers when Svelte 5's release candidate was announced. With performance issues mounting in our React app, particularly in our graphic editor, we decided to explore if Svelte could help us solve both challenges at once.
 
-This wasn’t a bold, all-in decision from day one. Our journey started with pure curiosity—a series of “let’s see if it works” experiments. We tried Svelte 5 in a React SPA, then pushed a little further, and a little further still. Each time, the answer was: “Hey, this actually works!” By the time we proved we could run React components inside SvelteKit, there was no turning back.
+Our small team took a cautious approach. First, we added a Svelte component to our React app. Then we rebuilt an entire page. Finally, we set up a SvelteKit app that could use our existing React components. Each step worked better than expected and delivered real improvements.
 
-This post is a chronicle of that trial-and-error adventure: the wins, the fails, and the real-world lessons from migrating a production app one experiment at a time. And in the end? The best tech choice might just be the one that keeps moving your business forward—especially in the AI era.
+This guide shares what we learned: how to connect the two frameworks, what problems to watch for, and the concrete benefits that made the effort worthwhile. If you're stuck with a React app that's becoming hard to maintain, this shows how to move forward without risking everything at once.
 
-Jump to [part two](#part-2-migrate) if you only want to know how to migrate.
+Skip to [part two](#part-2-migrate) for the technical details.
 
-Let's get started.
+
+## Table of Contents
+
+- [Incremental Migration of a Production React App to Svelte 5: A Practical Guide](#incremental-migration-of-a-production-react-app-to-svelte-5-a-practical-guide)
+  - [Table of Contents](#table-of-contents)
+  - [Part 1: Decision-Making](#part-1-decision-making)
+    - [The Business Reality](#the-business-reality)
+    - [Our Specific Challenges](#our-specific-challenges)
+      - [Why React Wasn't Working for Our Graphic Editor](#why-react-wasnt-working-for-our-graphic-editor)
+    - [Start with Small Bets: From Components to Routes](#start-with-small-bets-from-components-to-routes)
+      - [Begin with a Self-Contained Component](#begin-with-a-self-contained-component)
+      - [Validate the Integration Approach](#validate-the-integration-approach)
+      - [Scale to a Full Feature](#scale-to-a-full-feature)
+      - [Build Team Confidence](#build-team-confidence)
+    - [From Technical Success to Organizational Buy-in](#from-technical-success-to-organizational-buy-in)
+    - [Not Everything is a Win](#not-everything-is-a-win)
+    - [Beyond Migration: The Human Factor](#beyond-migration-the-human-factor)
+      - [Learning Curves Stack Quickly](#learning-curves-stack-quickly)
+      - [Developer Experience Isn't Universal](#developer-experience-isnt-universal)
+    - [Key Takeaways](#key-takeaways)
+  - [Part 2: Migrate](#part-2-migrate)
+    - [Prerequisites](#prerequisites)
+      - [React + Svelte 5 components](#react--svelte-5-components)
+      - [SvelteKit + React components](#sveltekit--react-components)
+    - [Integration Strategy Summary](#integration-strategy-summary)
+  - [Conclusion: Practical Migration in the Real World](#conclusion-practical-migration-in-the-real-world)
+
 
 ## Part 1: Decision-Making
 
-"Do not rewrite your product!" is a common piece of advice from seasoned product/tech leaders.
+"Do not rewrite your product!" is advice most tech leaders have heard—and for good reason. Rewrites are risky, expensive, and often fail to deliver on their promises.
 
-No matter whether you're in a startup or a large company, business value is the ultimate metric for decision-making, especially at a profit center.
+But sometimes, the cost of staying with your current technology exceeds the risk of changing. This was our situation with a legacy React application that was becoming increasingly difficult to maintain and extend.
 
-"You don't understand! We have years of tech debt, we can replace x, y, z with a new library, performance can be improved by 30%, lighthouse scores can be improved by 20%, CI times can be cut in half, development speed can be doubled, also..."
+### The Business Reality
 
-"Alright, how long will it take?"
+Every technology decision ultimately comes down to business value. Whether you're at a startup or an enterprise, you need to justify the investment of time and resources.
+
+The typical rewrite conversation often goes something like this:
+
+"We need to rewrite our app. We have years of tech debt, performance issues, and our development velocity is suffering."
+
+"How long will it take?"
 
 "About 6 months."
 
-"Can you do it in 3 months and keep shipping new features and bug fixes?"
+"Can you do it in 3 months while still shipping new features and fixing bugs?"
 
-If you've been in a similar situation, you might have already guessed the outcome of this conversation.
+The answer is almost always no. Complete rewrites rarely succeed because they compete with ongoing business needs. Instead, we needed an incremental approach that would allow us to migrate gradually while continuing to deliver value.
 
-As a tech leader, you know how undocumented legacy code can drag down the team's velocity, and how new features can be delayed or even canceled due to the unknowns.
+### Our Specific Challenges
 
-On one side, your team is complaining about poorly written code produced by Jason, who left the company before the current team joined. On the other side, your business team is pushing for more ad-hoc features and not satisfied with the quality of the product.
+In mid-2024, we began a gradual migration from our legacy React app to Svelte, with the goal of releasing a new version in Q2 2025. We faced three main challenges:
 
-Life is hard, buddy.
+1. **Technical debt**: More than 80% of our React SPA was written in JavaScript without tests or documentation, making changes increasingly risky.
 
-In mid-2024, we decided to embark on a gradual migration journey from a legacy React app to Svelte, with the goal of releasing a new version of the product in Q2 2025.
+2. **Overly complex architecture**: Previous developers had prioritized DRY principles to the extreme, creating components that were difficult to understand and maintain.
 
-### Why?
+3. **Performance bottlenecks**: Our graphic editor (similar to Figma or Canva) suffered from React's rendering model, causing poor performance with complex SVG elements.
 
-- More than 80% of the React SPA is written in JavaScript without tests and documentation.
-- Obsessed with DRY, which makes a simple component extremely complex to maintain. (Thanks, Jason)
-- We have a hand-crafted graphic editor with poor performance (re-rendering excessively) utilizing SVGs, not the Canvas API.
+While we could address the first two issues through refactoring, the performance problems were more fundamental to React's architecture, especially for our graphic-intensive application that required complex text formatting with different fonts, sizes, colors, and spacing within a single text box.
 
-You can address the first two issues by refactoring the codebase (we tried our best in the last two years). However, the last issue, which is more inherent to React, makes it a less than ideal choice for a graphic editor.
+#### Why React Wasn't Working for Our Graphic Editor
 
-> Our editor is like Figma or Canva, but needs to support complex text formatting (different font, size, color, letter spacing, line height in one text box).
+React is excellent for many applications, but it presented specific challenges for our graphic editor:
 
-#### The React Rendering Challenge
+1. **Performance with complex visuals**: When users edit designs with hundreds of SVG elements, React's approach to comparing the entire component tree became noticeably slow, especially during real-time editing.
 
-React's rendering model, while powerful for many applications, presented significant challenges for our graphic editor:
+2. **Too many unnecessary updates**: A particularly painful example was text editing. When a user changed a single character in a text box, React would re-render not just that text element but often dozens of unrelated components. Despite our team spending weeks implementing memoization and careful prop management, we couldn't eliminate the stuttering.
 
-1. **Virtual DOM Reconciliation**: React's reconciliation process compares the entire virtual DOM tree with its previous version to determine what needs to be updated. For a complex graphic editor with hundreds of elements, this process became expensive, especially during real-time editing.
+3. **Delayed visual feedback**: React's batched state updates sometimes created noticeable delays in visual feedback, which is particularly problematic in a design tool where users expect immediate, pixel-perfect control.
 
-2. **Coarse-grained Updates**: React's component-based update model meant that even small changes to a text property could trigger re-renders of entire component trees. We tried various optimization techniques (memoization, `React.memo`, careful prop management), but still struggled with performance.
+After years of optimization attempts, we realized we needed a framework with fine-grained reactivity—one that could update only what changed without re-evaluating entire component trees. Svelte 5's runes system offered exactly this capability.
 
-3. **Batched State Updates**: React's batching of state updates sometimes made it difficult to achieve the precise, immediate feedback needed in a design tool where users expect pixel-perfect control.
+With this understanding, we began to explore how to integrate Svelte 5 into our existing React application, starting with small, low-risk experiments.
 
-I've long dreamed of fine-grained reactivity, particularly when debugging the editor's issues and optimizing rendering performance. The introduction of runes in Svelte 5 has made this a reality.
+### Start with Small Bets: From Components to Routes
 
-When Svelte 5 RC was released, I decided it was time to take the leap.
+#### Begin with a Self-Contained Component
 
-<!-- To convince the team to try Svelte, I highlighted Svelte's unique selling points: its performance, concise syntax, and most importantly, the mental model shift that comes with Svelte.
+To ease back into Svelte (my last experience was with Svelte 3, pre-SvelteKit), I began by building a simple modal component. Modals are perfect test cases because they:
+- Are self-contained with clear boundaries
+- Require state management for open/close logic
+- Handle events for user interactions
+- Need styling that doesn't leak to other components
 
-In React, a common concern is how to prevent unnecessary re-renders or recalculations. Svelte's approach to reactivity is distinct from React's, and it's easier to understand and work with.
+#### Validate the Integration Approach
 
-This is crucial when building a graphic editor, where precise control over rendering and performance is vital. -->
+My goal was to answer two critical questions:
+1. How well does Svelte 5's new runes-based syntax work in practice?
+2. Can Svelte components be seamlessly integrated into our existing React app?
 
-### Start with Small Bets
+(If you want to jump straight to the integration details, see [React + Svelte 5 components](#prerequisites).)
 
-To ease back into Svelte (my last experience was with Svelte 3, pre-SvelteKit), I began by building a simple modal component. Modals are a great test case—they’re self-contained, but still touch on state, events, and styling.
+#### Scale to a Full Feature
 
-My goal was to get a feel for Svelte 5’s new syntax and see how smoothly it could be integrated into an existing React app. (If you want to jump straight to the integration details, see [React + Svelte 5 components](#prerequisites).)
+Once the modal was working smoothly, I migrated an entire route to Svelte. This larger test revealed how Svelte's approach simplified our codebase with intuitive state management through `$state` and `$derived`, more natural component composition, and significantly less boilerplate for event handling.
 
-Once I had the modal working, I felt confident enough to migrate an entire route to Svelte, which really showcased how clean and expressive the new syntax is.
+#### Build Team Confidence
 
-#### Not Everything is a Win
+While building these components, I created documentation and examples to introduce the team to Svelte 5. To make the case compelling, I highlighted:
 
-I was pleasantly surprised by how smooth the transition was, but I also encountered a few challenges along the way.
-- Ecosystem is not ready for Svelte 5: Makes sense. I believe most author libraries were waiting for the release-candidate before starting to support Svelte 5. Mix use of store and runes are inevitable, it makes team confusing about when to use which.
-- Lack of best practices and patterns: It's a chicken and egg problem, early-adopters are still exploring, still early to form best practices and patterns. Rounds of trial and error are inevitable.
+- **Performance benefits**: Svelte's compiler-first approach generates optimized JavaScript with minimal runtime overhead
+- **Developer experience**: Less boilerplate and more intuitive reactivity with runes
+- **Mental model shift**: In React, we constantly think about preventing unnecessary re-renders; in Svelte 5, the fine-grained reactivity system handles this automatically
 
-Seriously, I don't think above two are deal-breakers, it's just a matter of time.
+This shift is especially valuable for our graphic editor, where precise control over rendering and performance directly impacts user experience. When team members saw how much cleaner our code became and how performance improved in specific interactions, they became more open to broader adoption.
 
-#### Rewrite is not enough to get buy-in
+### From Technical Success to Organizational Buy-in
 
-Migrating an entire route and keep everything working is not enough. There must be a clear value proposition.
+Successfully migrating a component or even an entire route is just the beginning. Technical feasibility alone won't convince an organization to embrace change. We needed to demonstrate concrete business value to gain broader support.
 
-- Total amount of code
-- How fast to build a new feature?
-- How fast to address an issue?
-- How easy for your team to understand the code?
+After our initial successes, we focused on measuring and communicating three key areas of improvement:
 
-After we get positive feedback after deploying to the production, it's time to migrate.
+- **Code simplicity**: Fewer lines of code, built-in state management, and simpler component architecture reduced our maintenance burden
+- **Development speed**: Features that took days in React could be built in hours with Svelte, with faster feedback loops and more intuitive debugging
+- **User experience**: Smaller bundles loaded faster and interactions became more responsive in the components we migrated
 
-### In fact, it's not just a migration...
+For each area, we collected metrics comparing our Svelte implementation against the React version. For example, we tracked bundle size reductions, development time for similar features, and performance benchmarks for key user interactions. These concrete measurements helped us move the conversation from subjective preferences to objective business benefits.
 
-#### Pick up Svelte 5 & SvelteKit is not easy
+With these promising results, we've gained support for continuing our migration. The graphic editor—our most complex component and the one that initially motivated this change—remains the final piece to be migrated. Based on our proof of concept work, we expect the fine-grained reactivity of Svelte to significantly improve its performance.
 
-#### Your DX is not your team's DX
+### Not Everything is a Win
 
-Mental modal shift is a considerable cost.
+While the transition was smoother than expected, we faced two main challenges that are worth noting.
 
-#### Key Takeaways
+First, the Svelte 5 ecosystem isn't fully mature yet. Many library authors were waiting for the release candidate before adding support, which is understandable but limiting. We often had to mix older store-based patterns with the newer runes approach, which sometimes confused team members about which pattern to use when.
 
-- Be honest about both the upsides and the challenges. Svelte 5’s ecosystem is still young, and you’ll need to improvise or adapt patterns from elsewhere.
-  - double-edge sword, React tends to find yet another libraryies, but apps are getting more and more complex. On the other hand, Svelte makes it easier to build your own using Svelte actions.
-- Give your team time to adjust—switching mental models from React to Svelte takes practice.
-- Avoid overwhelming your project with too many changes at once. For example, I held off on introducing SvelteKit until the team was comfortable with Svelte itself.
-- Start with isolated components to minimize risk and maximize learning before scaling up.
+Second, we lacked established best practices. As early adopters, we found ourselves creating patterns through trial and error rather than following well-worn paths. This meant occasional backtracking when our first approach didn't scale well.
 
-#### Tech Stack
-- React vite SPA
-- Redux (not redux toolkit) + Context API
-- Material UI 4 + CSS modules
-- Svelte 5
-- shadcn-svelte
+Neither of these issues are deal-breakers—they're temporary growing pains that will resolve as the ecosystem matures. The benefits we gained still outweighed these challenges.
+
+### Beyond Migration: The Human Factor
+
+Switching technologies isn't just about code—it's about people and processes too. This transition taught us several important lessons about managing change.
+
+#### Learning Curves Stack Quickly
+
+Learning Svelte 5 alone would have been manageable, but tackling both Svelte and SvelteKit simultaneously proved challenging. The team needed time to absorb one set of concepts before adding another. We found it more effective to master the component model first, then gradually introduce routing and other framework features.
+
+#### Developer Experience Isn't Universal
+
+Another important lesson emerged as we expanded our adoption efforts. What felt intuitive to me wasn't always obvious to others. Team members with years of React experience had to unlearn certain habits and ways of thinking. The mental shift from React's component re-rendering approach to Svelte's fine-grained reactivity required patience and practice.
+
+This adjustment period affected productivity temporarily, but the investment paid off as team members began to appreciate Svelte's more direct approach to UI updates.
+
+### Key Takeaways
+
+From our experience, here are the most useful lessons for teams considering a similar transition:
+
+1. Be realistic about both benefits and challenges. The Svelte ecosystem is still developing, which means you'll sometimes need to create solutions that React developers take for granted.
+
+2. Give your team adequate time to adjust. The shift in thinking from React to Svelte is significant and can't be rushed.
+
+3. Introduce changes incrementally. We focused on Svelte components first, then gradually added more complex patterns and framework features.
+
+4. Start with isolated, non-critical components to build confidence before tackling core features.
+
+5. Create clear guidelines about when to use which pattern, especially when mixing older approaches with newer ones.
+
+6. Balance the tradeoffs: React's ecosystem offers many libraries but can lead to complexity, while Svelte often requires building custom solutions that are simpler and more tailored to your needs.
 
 ## Part 2: Migrate
+
+Now that we've covered why we decided to migrate and the strategic approach we took, let's dive into the technical details of how we actually implemented the integration between React and Svelte. The following patterns and code examples represent the practical solutions we developed during our migration journey.
+
+This section provides practical steps for integrating Svelte 5 components into a React application and vice versa. These patterns enabled our team to migrate incrementally without disrupting the existing application.
+
 ### Prerequisites
 
-- pnpm workspace
-- Vite-based React app
-  > or you can use `reactify` from [`svelte-preprocess-react`](https://github.com/bfanger/svelte-preprocess-react/tree/main) in a non-Vite React app
-- Svelte 5 + SvelteKit 2
+Before starting the integration, you'll need a basic understanding of both React and Svelte 5. The examples below assume you're working in a monorepo structure, but the same principles apply to separate repositories.
 
 #### React + Svelte 5 components
+
+Let's start by adding Svelte components to an existing React application. This approach allows you to gradually introduce Svelte while maintaining your current React codebase.
+
 Run `pnpm create vite react-vite --template react-ts` to create a new React app in this monorepo.
 
 1. Install `svelte` & `@sveltejs/vite-plugin-svelte`:
@@ -242,9 +303,15 @@ It should work as expected now:
 
 #### SvelteKit + React components
 
-In order to migrate the whole app incrementally, we move some shared React components to a package `react-components` under this monorepo to ensure we can use them in both React & SvelteKit apps.
+After successfully integrating Svelte components into our React application, we were ready for the next phase of our migration. While adding individual Svelte components was valuable, we wanted to start building new features directly in SvelteKit. However, we couldn't afford to rewrite all our existing React components at once.
 
-Adding React components to SvelteKit requires a different approach than integrating Svelte components into React.
+Once you've established a pattern for using Svelte components in React, you might want to start building new features directly in SvelteKit while still leveraging your existing React components. This approach allows you to:
+
+1. Create new routes and features in SvelteKit
+2. Reuse existing React components without rewriting them
+3. Gradually shift your development to Svelte while maintaining access to your React component library
+
+In our migration, we moved shared React components to a separate package within our monorepo, making them available to both applications. Here's how to set it up:
 
 1. First, we need to package the shared React components to make them available to both applications.
 > Please find the source code in `packages/react-components`. We use nodemon to watch the source files and rebuild the package when they change.
@@ -331,3 +398,32 @@ export default function Counter({ initCount = 0 }: { initCount: number }) {
 <ReactCounter initCount={0} />
 ```
 ![react-in-sveltekit](./assets/react-in-sveltekit.gif)
+
+With both integration patterns working successfully in our codebase, we had established a solid foundation for our migration strategy. These technical approaches allowed us to move at our own pace while maintaining a fully functional application throughout the process.
+
+### Integration Strategy Summary
+
+This bidirectional integration approach gave us several advantages during our migration:
+
+1. **Risk mitigation** - We could test Svelte components in isolation before committing to larger changes
+2. **Incremental adoption** - Team members could learn Svelte while continuing to work with familiar React patterns
+3. **Practical coexistence** - Both frameworks could share the same data and UI components during the transition period
+
+While there are some performance considerations when embedding components from one framework inside another, this approach prioritizes a smooth migration path over perfect optimization. As more of your application moves to Svelte, you'll naturally reduce these integration points.
+
+Remember that the goal isn't to maintain this hybrid state forever, but to provide a practical bridge between technologies while your team and codebase transition to the new framework.
+
+## Conclusion: Practical Migration in the Real World
+
+Our journey from React to Svelte 5 wasn't about chasing the newest technology—it was about solving real business problems with a pragmatic approach. For our small team, this incremental migration strategy delivered several key benefits:
+
+- **Reduced risk**: By taking small steps and validating each one, we avoided the dangers of a complete rewrite
+- **Continuous delivery**: We maintained our ability to ship features and fixes throughout the migration
+- **Team adaptation**: Engineers had time to learn and adjust to the new paradigm
+- **Business alignment**: We demonstrated clear value at each stage, securing continued support
+
+While we're still completing our migration—with the graphic editor as our final and most challenging component—the path forward is clear. The integration patterns we've shared in this guide have proven robust in production, and the performance improvements we've seen confirm our decision.
+
+For teams considering a similar transition, remember that technology migrations don't have to be all-or-nothing propositions. The ability to mix frameworks gives you the freedom to move at a pace that makes sense for your business and team. Start small, measure the results, and let the benefits guide your progress.
+
+In our case, what began as a cautious experiment has evolved into a transformative upgrade for our product. The most important lesson? Focus less on the technology itself and more on the incremental process that makes change sustainable.
