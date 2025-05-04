@@ -2,11 +2,13 @@
 
 Rewriting a production app is risky for any team, but especially for a small startup like ours with limited engineering resources. Yet sometimes, the right opportunity makes it worth considering.
 
-We were already planning to rebuild our platform to better serve enterprise customers when Svelte 5's release candidate was announced. With performance issues mounting in our React app, particularly in our graphic editor, we decided to explore if Svelte could help us solve both challenges at once.
+For us, that moment came when Svelte 5's release candidate coincided with our plans to rebuild our platform for enterprise customers. Our existing React application, particularly its graphic editor component, was struggling with performance issues that were becoming increasingly difficult to manage. This convergence presented an opportunity: could migrating to Svelte help us address both our immediate performance bottlenecks and our long-term platform goals?
 
 Our small team took a cautious approach. First, we added a Svelte component to our React app. Then we rebuilt an entire page. Finally, we set up a SvelteKit app that could use our existing React components. Each step worked better than expected and delivered real improvements.
 
-This guide shares what we learned: how to connect the two frameworks, what problems to watch for, and the concrete benefits that made the effort worthwhile. If you're stuck with a React app that's becoming hard to maintain, this shows how to move forward without risking everything at once.
+Hi, I'm David 👋, an engineering lead at [dipp](https://www.withdipp.com/en-us/), where we help brands automate digital content creation. Our platform simplifies design tasks and fosters team collaboration – a mission directly impacted by the performance and maintainability of our tools.
+
+In this guide, I'll share the practical lessons from our journey: how we integrated React and Svelte 5, the challenges we encountered, and the benefits that justified the effort. If your team is facing similar hurdles with a complex React application, this provides a roadmap for migrating incrementally without disrupting your product or overwhelming your team.
 
 Skip to [part two](#part-2-migrate) for the technical details.
 
