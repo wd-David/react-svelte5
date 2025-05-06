@@ -34,8 +34,8 @@ Skip to [part two](#part-2-migrate) for the technical details.
     - [Key Takeaways](#key-takeaways)
   - [Part 2: Migrate](#part-2-migrate)
     - [Prerequisites](#prerequisites)
-      - [React + Svelte 5 components](#react--svelte-5-components)
-      - [SvelteKit + React components](#sveltekit--react-components)
+    - [How to render Svelte 5 components in React](#how-to-render-svelte-5-components-in-react)
+    - [How to render React components in SvelteKit](#how-to-render-react-components-in-sveltekit)
     - [Integration Strategy Summary](#integration-strategy-summary)
   - [Conclusion: Practical Migration in the Real World](#conclusion-practical-migration-in-the-real-world)
 
@@ -130,9 +130,15 @@ After our initial successes, we focused on measuring and communicating three key
 - **Development speed**: Features that took days in React could be built in hours with Svelte, with faster feedback loops and more intuitive debugging
 - **User experience**: Smaller bundles loaded faster and interactions became more responsive in the components we migrated
 
-For each area, we collected metrics comparing our Svelte implementation against the React version. For example, we tracked bundle size reductions, development time for similar features, and performance benchmarks for key user interactions. These concrete measurements helped us move the conversation from subjective preferences to objective business benefits.
+For each area, we collected metrics comparing our Svelte implementation against the React version:
 
-With these promising results, we've gained support for continuing our migration. The graphic editor—our most complex component and the one that initially motivated this change—remains the final piece to be migrated. Based on our proof of concept work, we expect the fine-grained reactivity of Svelte to significantly improve its performance.
+- Bundle size reduced by 23%. (8.5MB to 6.5 MB)
+- Development time cut more than half. (digital asset management)
+- Lighthouse score improves from 56 to 72. (both are not optimized)
+
+> While these metrics show technical improvements, they don't necessarily translate directly to business value. Focus instead on measuring and communicating user-facing benefits like improved load times and interaction responsiveness that impact the customer experience.
+
+With these promising results, we've gained support for continuing our migration. The graphic editor, our most complex component and the one that initially motivated this change—remains the final piece to be migrated. Based on our proof of concept work, we expect the fine-grained reactivity of Svelte to significantly improve its performance.
 
 ### Not Everything is a Win
 
@@ -144,6 +150,50 @@ Second, we lacked established best practices. As early adopters, we found oursel
 
 Neither of these issues are deal-breakers—they're temporary growing pains that will resolve as the ecosystem matures. The benefits we gained still outweighed these challenges.
 
+> A key pattern we developed combines Svelte 5's runes with a state management class, integrating `FiniteStateMachine`, `watch`, and `resource` from the [`runed`](https://runed.dev/docs) library for robust state handling:
+> 
+> ```ts
+> // my-state.svelte.ts
+> import { FiniteStateMachine, watch, resource, type ResourceReturn } from 'runed'
+>
+> type MyStates = "on" | "off";
+> type MyEvents = "toggle";
+>
+> export class MyState extends FiniteStateMachine<MyStates, MyEvents> {
+>   readonly myResource: ResourceReturn  
+>   constructor(getter: () => string) {
+>     super("off", {
+>	      off: {
+>		      toggle: () => {
+>			      f.debounce(5000, "toggle");
+>			      return "on";
+>		      }
+>	      },
+>	      on: {
+>		      toggle: "off"
+>	      }
+>     })
+>     // Pass the getter to watch to rerun side effects
+>     watch(getter, () => {})
+>     // or use resource to rerun fetcher
+>     this.myResource = resource(getter. async () => {})
+>     // NOTE: We prefer to use watch orver $effect because for most of the time we need to use untrack for other reactive value in $effect
+>   }
+> }
+>
+> const MY_STATE_KEY = Symbol('my-state');
+>
+> export function setMyState(getter: () => string) {
+>   setContext(MY_STATE_KEY, new MyState(getter));
+> }
+>
+> export function getMyState() {
+>   return getContext<MyState>(MY_STATE_KEY);
+> }
+> ```
+> Ref: [Svelte 5's Secret Weapon: Classes + Context
+](https://www.youtube.com/watch?v=e1vlC31Sh34) by the great [@huntabyte](https://x.com/huntabyte)
+
 ### Beyond Migration: The Human Factor
 
 Switching technologies isn't just about code—it's about people and processes too. This transition taught us several important lessons about managing change.
@@ -151,6 +201,14 @@ Switching technologies isn't just about code—it's about people and processes t
 #### Learning Curves Stack Quickly
 
 Learning Svelte 5 alone would have been manageable, but tackling both Svelte and SvelteKit simultaneously proved challenging. The team needed time to absorb one set of concepts before adding another. We found it more effective to master the component model first, then gradually introduce routing and other framework features.
+
+Key resources that helped our team quickly understand Svelte 5:
+- [Official tutorials](https://svelte.dev/tutorial/svelte/welcome-to-svelte)
+- [Svelte 5 Basics - Complete Svelte 5 Course for Beginners](https://www.youtube.com/watch?v=8DQailPy3q8) by Syntax.fm
+- [Don't Sleep on Svelte 5](https://www.youtube.com/watch?v=DgNWssn2vpc) by [@huntabyte](https://x.com/huntabyte)
+- [The Svelte 5 Reactivity Guide](https://youtu.be/tErKyuUTzsM?si=L1MN0Cd5XFm8G_p3) by [Joy of Code]
+(https://x.com/joyofcodedev)
+- [Component Party](https://component-party.dev/) - Side-by-side React vs Svelte component comparisons
 
 #### Developer Experience Isn't Universal
 
@@ -184,7 +242,7 @@ This section provides practical steps for integrating Svelte 5 components into a
 
 Before starting the integration, you'll need a basic understanding of both React and Svelte 5. The examples below assume you're working in a monorepo structure, but the same principles apply to separate repositories.
 
-#### React + Svelte 5 components
+### How to render Svelte 5 components in React
 
 Let's start by adding Svelte components to an existing React application. This approach allows you to gradually introduce Svelte while maintaining your current React codebase.
 
@@ -303,7 +361,7 @@ It should work as expected now:
 
 > **Note**: As a best practice, only pass props that don't change frequently to Svelte components, such as global variables like i18n, theme configurations, etc.
 
-#### SvelteKit + React components
+## How to render React components in SvelteKit
 
 After successfully integrating Svelte components into our React application, we were ready for the next phase of our migration. While adding individual Svelte components was valuable, we wanted to start building new features directly in SvelteKit. However, we couldn't afford to rewrite all our existing React components at once.
 

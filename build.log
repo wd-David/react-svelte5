@@ -1,0 +1,172 @@
+#0 building with "orbstack" instance using docker driver
+
+#1 [sveltekit internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.47kB done
+#1 DONE 0.0s
+
+#2 [sveltekit internal] load metadata for docker.io/library/node:22-slim
+#2 DONE 0.8s
+
+#3 [sveltekit internal] load .dockerignore
+#3 transferring context: 115B done
+#3 DONE 0.0s
+
+#4 [sveltekit workspace 1/6] FROM docker.io/library/node:22-slim@sha256:1c18d9ab3af4585870b92e4dbc5cac5a0dc77dd13df1a5905cea89fc720eb05b
+#4 DONE 0.0s
+
+#5 [sveltekit sveltekit 2/3] WORKDIR /app
+#5 CACHED
+
+#6 [sveltekit internal] load build context
+#6 transferring context: 58.76kB 0.0s done
+#6 DONE 0.1s
+
+#7 [sveltekit workspace 2/6] RUN apt-get update && apt-get install -y ca-certificates
+#7 CACHED
+
+#8 [sveltekit workspace 3/6] RUN corepack enable
+#8 CACHED
+
+#9 [sveltekit workspace 4/6] WORKDIR /app
+#9 CACHED
+
+#10 [sveltekit workspace 5/6] COPY . .
+#10 DONE 0.4s
+
+#11 [sveltekit workspace 6/6] RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --no-frozen-lockfile
+#11 0.778 ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.8.0.tgz
+#11 2.206 Scope: all 4 workspace projects
+#11 2.432 Progress: resolved 1, reused 0, downloaded 0, added 0
+#11 3.440 Progress: resolved 54, reused 54, downloaded 0, added 0
+#11 4.440 Progress: resolved 401, reused 367, downloaded 0, added 0
+#11 5.420  WARN  2 deprecated subdependencies found: glob@7.2.3, inflight@1.0.6
+#11 5.436 Packages: +375
+#11 5.436 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#11 5.443 Progress: resolved 435, reused 374, downloaded 0, added 0
+#11 6.444 Progress: resolved 435, reused 374, downloaded 0, added 189
+#11 7.447 Progress: resolved 435, reused 374, downloaded 0, added 351
+#11 7.614 Progress: resolved 435, reused 374, downloaded 0, added 375, done
+#11 8.727 
+#11 8.727 ╭ Warning ─────────────────────────────────────────────────────────────────────╮
+#11 8.727 │                                                                              │
+#11 8.727 │   Ignored build scripts: @parcel/watcher, svelte-preprocess-react.           │
+#11 8.727 │   Run "pnpm approve-builds" to pick which dependencies should be allowed     │
+#11 8.727 │   to run scripts.                                                            │
+#11 8.727 │                                                                              │
+#11 8.727 ╰──────────────────────────────────────────────────────────────────────────────╯
+#11 8.727 
+#11 8.816 Done in 7.1s using pnpm v10.8.0
+#11 DONE 9.1s
+
+#12 [sveltekit build-components 1/5] WORKDIR /app
+#12 DONE 0.1s
+
+#13 [sveltekit build-components 2/5] RUN pnpm --filter react-components build
+#13 1.495 
+#13 1.495 > react-components@ build /app/packages/react-components
+#13 1.495 > npx vite build
+#13 1.495 
+#13 4.896 vite v6.2.6 building for production...
+#13 6.624 transforming...
+#13 6.772 ✓ 11 modules transformed.
+#13 6.828 rendering chunks...
+#13 6.843 
+#13 6.843 [vite:dts] Start generate declaration files...
+#13 6.848 computing gzip size...
+#13 6.860 dist/index.js  9.32 kB │ gzip: 3.07 kB │ map: 23.20 kB
+#13 6.860 [vite:dts] Declaration files built in 1675ms.
+#13 6.860 
+#13 6.861 ✓ built in 1.94s
+#13 6.979 npm notice
+#13 6.979 npm notice New major version of npm available! 10.9.2 -> 11.3.0
+#13 6.979 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.3.0
+#13 6.979 npm notice To update run: npm install -g npm@11.3.0
+#13 6.979 npm notice
+#13 DONE 7.2s
+
+#14 [sveltekit build-components 3/5] RUN mkdir -p /tmp/built-components
+#14 DONE 0.2s
+
+#15 [sveltekit build-components 4/5] RUN cp -r packages/react-components/dist /tmp/built-components/
+#15 DONE 0.1s
+
+#16 [sveltekit build-components 5/5] RUN cp packages/react-components/package.json /tmp/built-components/
+#16 DONE 0.2s
+
+#17 [sveltekit build-sveltekit 1/3] COPY --from=build-components /tmp/built-components /app/packages/react-components
+#17 DONE 0.0s
+
+#18 [sveltekit build-sveltekit 2/3] RUN pnpm --filter sveltekit build
+#18 0.847 
+#18 0.847 > sveltekit@0.0.1 build /app/apps/sveltekit
+#18 0.847 > vite build
+#18 0.847 
+#18 2.727 vite v6.2.6 building SSR bundle for production...
+#18 2.819 transforming...
+#18 3.859 ✓ 188 modules transformed.
+#18 3.940 rendering chunks...
+#18 4.489 vite v6.2.6 building for production...
+#18 4.493 transforming...
+#18 6.661 ✓ 184 modules transformed.
+#18 6.773 rendering chunks...
+#18 6.899 computing gzip size...
+#18 6.922 .svelte-kit/output/client/_app/version.json                         0.03 kB │ gzip:   0.05 kB
+#18 6.922 .svelte-kit/output/client/.vite/manifest.json                       3.57 kB │ gzip:   0.70 kB
+#18 6.922 .svelte-kit/output/client/_app/immutable/chunks/aRbmbNAJ.js         0.04 kB │ gzip:   0.06 kB
+#18 6.922 .svelte-kit/output/client/_app/immutable/entry/start.DuEOViCY.js    0.08 kB │ gzip:   0.09 kB
+#18 6.922 .svelte-kit/output/client/_app/immutable/chunks/mEqliF14.js         0.20 kB │ gzip:   0.17 kB
+#18 6.922 .svelte-kit/output/client/_app/immutable/nodes/0.DhtGwVDE.js        0.22 kB │ gzip:   0.17 kB
+#18 6.922 .svelte-kit/output/client/_app/immutable/chunks/B06QKdYc.js         0.30 kB │ gzip:   0.22 kB
+#18 6.922 .svelte-kit/output/client/_app/immutable/chunks/C_nJbNm8.js         1.00 kB │ gzip:   0.57 kB
+#18 6.922 .svelte-kit/output/client/_app/immutable/nodes/1.D533WhE1.js        1.05 kB │ gzip:   0.60 kB
+#18 6.922 .svelte-kit/output/client/_app/immutable/chunks/Uxx7fSVd.js         1.61 kB │ gzip:   0.91 kB
+#18 6.922 .svelte-kit/output/client/_app/immutable/chunks/DF5bzD-0.js         2.30 kB │ gzip:   1.18 kB
+#18 6.923 .svelte-kit/output/client/_app/immutable/chunks/BOgpq9wR.js         2.63 kB │ gzip:   1.36 kB
+#18 6.923 .svelte-kit/output/client/_app/immutable/entry/app.PGLg0XR0.js      5.53 kB │ gzip:   2.62 kB
+#18 6.923 .svelte-kit/output/client/_app/immutable/chunks/vWokrOhW.js        15.40 kB │ gzip:   6.16 kB
+#18 6.923 .svelte-kit/output/client/_app/immutable/chunks/1RSdS3P4.js        32.32 kB │ gzip:  12.60 kB
+#18 6.923 .svelte-kit/output/client/_app/immutable/nodes/2.CVU_7hT_.js      371.21 kB │ gzip: 116.88 kB
+#18 6.923 ✓ built in 2.43s
+#18 7.450 .svelte-kit/output/server/.vite/manifest.json                   2.67 kB
+#18 7.451 .svelte-kit/output/server/entries/fallbacks/layout.svelte.js    0.16 kB
+#18 7.451 .svelte-kit/output/server/internal.js                           0.31 kB
+#18 7.451 .svelte-kit/output/server/chunks/equality.js                    0.33 kB
+#18 7.451 .svelte-kit/output/server/entries/fallbacks/error.svelte.js     1.86 kB
+#18 7.451 .svelte-kit/output/server/chunks/index.js                       4.77 kB
+#18 7.451 .svelte-kit/output/server/chunks/exports.js                     6.90 kB
+#18 7.451 .svelte-kit/output/server/entries/pages/_page.svelte.js        22.61 kB
+#18 7.451 .svelte-kit/output/server/chunks/internal.js                   50.00 kB
+#18 7.451 .svelte-kit/output/server/index.js                            132.20 kB
+#18 7.451 ✓ built in 4.72s
+#18 7.452 
+#18 7.452 Run npm run preview to preview your production build locally.
+#18 7.455 
+#18 7.455 > Using @sveltejs/adapter-node
+#18 14.15   ✔ done
+#18 DONE 14.4s
+
+#19 [sveltekit build-sveltekit 3/3] RUN pnpm deploy --filter sveltekit --prod pruned
+#19 1.046 Packages are cloned from the content-addressable store to the virtual store.
+#19 1.046   Content-addressable store is at: /pnpm/store/v10
+#19 1.046   Virtual store is at:             pruned/node_modules/.pnpm
+#19 DONE 1.3s
+
+#20 [sveltekit sveltekit 3/3] COPY --from=build-sveltekit / .
+#20 DONE 2.4s
+
+#21 [sveltekit] exporting to image
+#21 exporting layers
+#21 exporting layers 2.8s done
+#21 writing image sha256:2f1c97f1f152734e1cc809ca214eb54499458562b9ec86922cb7a1f2bf945a40 done
+#21 naming to docker.io/library/sveltekit-local:latest done
+#21 DONE 2.8s
+
+#22 [sveltekit] resolving provenance for metadata file
+#22 DONE 0.1s
+ Network react-svelte5-mix-and-match_default  Creating
+ Network react-svelte5-mix-and-match_default  Created
+ Container sveltekit-local  Creating
+ sveltekit The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested 
+ Container sveltekit-local  Created
+ Container sveltekit-local  Starting
+ Container sveltekit-local  Started

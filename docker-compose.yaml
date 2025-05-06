@@ -1,0 +1,10 @@
+services:
+  sveltekit:
+    build:
+      context: .
+      platforms:
+        - 'linux/amd64'
+      dockerfile: Dockerfile
+      target: sveltekit
+    image: sveltekit-local:latest
+    container_name: sveltekit-local
