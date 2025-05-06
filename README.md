@@ -206,8 +206,7 @@ Key resources that helped our team quickly understand Svelte 5:
 - [Official tutorials](https://svelte.dev/tutorial/svelte/welcome-to-svelte)
 - [Svelte 5 Basics - Complete Svelte 5 Course for Beginners](https://www.youtube.com/watch?v=8DQailPy3q8) by Syntax.fm
 - [Don't Sleep on Svelte 5](https://www.youtube.com/watch?v=DgNWssn2vpc) by [@huntabyte](https://x.com/huntabyte)
-- [The Svelte 5 Reactivity Guide](https://youtu.be/tErKyuUTzsM?si=L1MN0Cd5XFm8G_p3) by [Joy of Code]
-(https://x.com/joyofcodedev)
+- [The Svelte 5 Reactivity Guide](https://youtu.be/tErKyuUTzsM?si=L1MN0Cd5XFm8G_p3) by [Joy of Code](https://x.com/joyofcodedev)
 - [Component Party](https://component-party.dev/) - Side-by-side React vs Svelte component comparisons
 
 #### Developer Experience Isn't Universal
