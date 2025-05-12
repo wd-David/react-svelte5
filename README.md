@@ -486,3 +486,9 @@ While we're still completing our migration—with the graphic editor as our fina
 For teams considering a similar transition, remember that technology migrations don't have to be all-or-nothing propositions. The ability to mix frameworks gives you the freedom to move at a pace that makes sense for your business and team. Start small, measure the results, and let the benefits guide your progress.
 
 In our case, what began as a cautious experiment has evolved into a transformative upgrade for our product. The most important lesson? Focus less on the technology itself and more on the incremental process that makes change sustainable.
+
+Thank you for reading! If you found this guide helpful, consider:
+- Following me on [X](https://x.com/davipon) or [Bluesky](https://bsky.app/profile/davipon.bsky.social) for updates
+- Starring the repo and sharing with others who might find it helpful
+
+Your feedback and contributions are always welcome.
