@@ -338,6 +338,7 @@ function App() {
 export default App
 ```
 ![svelte-in-react](./assets/svelte5-in-react.gif)
+
 You may have noticed an issue with this approach.
 
 Due to React's rerendering behavior, the Svelte component gets remounted each time, which is not the desired outcome.
