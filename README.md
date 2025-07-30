@@ -6,12 +6,11 @@ For us, that moment came when Svelte 5's release candidate coincided with our pl
 
 Our small team took a cautious approach. First, we added a Svelte component to our React app. Then we rebuilt an entire page. Finally, we set up a SvelteKit app that could use our existing React components. Each step worked better than expected and delivered real improvements.
 
-Hi, I'm David 👋, an engineering lead at [dipp](https://www.withdipp.com/en-us/), where we help brands automate digital content creation. Our platform simplifies design tasks and fosters team collaboration – a mission directly impacted by the performance and maintainability of our tools.
+Hi, I'm David 👋, a product manager (ex-engineering lead) at [dipp](https://www.withdipp.com/en-us/), where we help brands automate digital content creation. Our platform simplifies design tasks and fosters team collaboration – a mission directly impacted by the performance and maintainability of our tools.
 
 In this guide, I'll share the practical lessons from our journey: how we integrated React and Svelte 5, the challenges we encountered, and the benefits that justified the effort. If your team is facing similar hurdles with a complex React application, this provides a roadmap for migrating incrementally without disrupting your product or overwhelming your team.
 
 Skip to [part two](#part-2-migrate) for the technical details.
-
 
 ## Table of Contents
 
@@ -38,7 +37,6 @@ Skip to [part two](#part-2-migrate) for the technical details.
     - [How to render React components in SvelteKit](#how-to-render-react-components-in-sveltekit)
     - [Integration Strategy Summary](#integration-strategy-summary)
   - [Conclusion: Practical Migration in the Real World](#conclusion-practical-migration-in-the-real-world)
-
 
 ## Part 1: Decision-Making
 
@@ -93,6 +91,7 @@ With this understanding, we began to explore how to integrate Svelte 5 into our 
 #### Begin with a Self-Contained Component
 
 To ease back into Svelte (my last experience was with Svelte 3, pre-SvelteKit), I began by building a simple modal component. Modals are perfect test cases because they:
+
 - Are self-contained with clear boundaries
 - Require state management for open/close logic
 - Handle events for user interactions
@@ -101,6 +100,7 @@ To ease back into Svelte (my last experience was with Svelte 3, pre-SvelteKit), 
 #### Validate the Integration Approach
 
 My goal was to answer two critical questions:
+
 1. How well does Svelte 5's new runes-based syntax work in practice?
 2. Can Svelte components be seamlessly integrated into our existing React app?
 
@@ -151,7 +151,7 @@ Second, we lacked established best practices. As early adopters, we found oursel
 Neither of these issues are deal-breakers—they're temporary growing pains that will resolve as the ecosystem matures. The benefits we gained still outweighed these challenges.
 
 > A key pattern we developed combines Svelte 5's runes with a state management class, integrating `FiniteStateMachine`, `watch`, and `resource` from the [`runed`](https://runed.dev/docs) library for robust state handling:
-> 
+>
 > ```ts
 > // my-state.svelte.ts
 > import { FiniteStateMachine, watch, resource, type ResourceReturn } from 'runed'
@@ -160,18 +160,18 @@ Neither of these issues are deal-breakers—they're temporary growing pains that
 > type MyEvents = "toggle";
 >
 > export class MyState extends FiniteStateMachine<MyStates, MyEvents> {
->   readonly myResource: ResourceReturn  
+>   readonly myResource: ResourceReturn
 >   constructor(getter: () => string) {
 >     super("off", {
->	      off: {
->		      toggle: () => {
->			      f.debounce(5000, "toggle");
->			      return "on";
->		      }
->	      },
->	      on: {
->		      toggle: "off"
->	      }
+> 	      off: {
+> 		      toggle: () => {
+> 			      f.debounce(5000, "toggle");
+> 			      return "on";
+> 		      }
+> 	      },
+> 	      on: {
+> 		      toggle: "off"
+> 	      }
 >     })
 >     // Pass the getter to watch to rerun side effects
 >     watch(getter, () => {})
@@ -191,8 +191,9 @@ Neither of these issues are deal-breakers—they're temporary growing pains that
 >   return getContext<MyState>(MY_STATE_KEY);
 > }
 > ```
+>
 > Ref: [Svelte 5's Secret Weapon: Classes + Context
-](https://www.youtube.com/watch?v=e1vlC31Sh34) by the great [@huntabyte](https://x.com/huntabyte)
+> ](https://www.youtube.com/watch?v=e1vlC31Sh34) by the great [@huntabyte](https://x.com/huntabyte)
 
 ### Beyond Migration: The Human Factor
 
@@ -203,6 +204,7 @@ Switching technologies isn't just about code—it's about people and processes t
 Learning Svelte 5 alone would have been manageable, but tackling both Svelte and SvelteKit simultaneously proved challenging. The team needed time to absorb one set of concepts before adding another. We found it more effective to master the component model first, then gradually introduce routing and other framework features.
 
 Key resources that helped our team quickly understand Svelte 5:
+
 - [Official tutorials](https://svelte.dev/tutorial/svelte/welcome-to-svelte)
 - [Svelte 5 Basics - Complete Svelte 5 Course for Beginners](https://www.youtube.com/watch?v=8DQailPy3q8) by [Syntax.fm](https://syntax.fm/)
 - [Don't Sleep on Svelte 5](https://www.youtube.com/watch?v=DgNWssn2vpc) by [@huntabyte](https://x.com/huntabyte)
@@ -248,51 +250,57 @@ Let's start by adding Svelte components to an existing React application. This a
 Run `pnpm create vite react-vite --template react-ts` to create a new React app in this monorepo.
 
 1. Install `svelte` & `@sveltejs/vite-plugin-svelte`:
+
 ```bash
 pnpm add -D svelte @sveltejs/vite-plugin-svelte
 ```
 
 2. Add `@sveltejs/vite-plugin-svelte` to `vite.config.ts`:
+
 ```ts
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { svelte } from '@sveltejs/vite-plugin-svelte'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), svelte()]
-})
+  plugins: [react(), svelte()],
+});
 ```
 
 3. Create a `useSvelte.tsx` hook:
-```tsx
-import { useLayoutEffect, useRef } from 'react'
-import { mount } from 'svelte'
 
-type Component = Parameters<typeof mount>[0]
-type Props = Parameters<typeof mount>[1]['props']
+```tsx
+import { useLayoutEffect, useRef } from "react";
+import { mount } from "svelte";
+
+type Component = Parameters<typeof mount>[0];
+type Props = Parameters<typeof mount>[1]["props"];
 
 /** A wrapper for Svelte component */
 export default function useSvelte(Component: Component) {
-  const svelteRef = useRef<HTMLDivElement>(null)
+  const svelteRef = useRef<HTMLDivElement>(null);
 
   return (props: Props) => {
     useLayoutEffect(() => {
       while (svelteRef.current?.firstChild) {
-        svelteRef.current?.firstChild?.remove()
+        svelteRef.current?.firstChild?.remove();
       }
       mount(Component, {
         target: svelteRef.current as unknown as Document,
-        props
-      })
-    }, [])
+        props,
+      });
+    }, []);
 
-    return <div style={{ height: '100%', width: '100%' }} ref={svelteRef}></div>
-  }
+    return (
+      <div style={{ height: "100%", width: "100%" }} ref={svelteRef}></div>
+    );
+  };
 }
 ```
 
 4. Create a Svelte component (in the React app) and use `useSvelte`:
+
 ```svelte
 // src/lib/components/counter/counter.svelte
 <script lang="ts">
@@ -305,25 +313,27 @@ export default function useSvelte(Component: Component) {
 </button>
 
 ```
+
 ```tsx
 // src/lib/components/counter/svelte-counter.tsx
-import useSvelte from '../../hooks/useSvelte'
-import Counter from './counter.svelte'
+import useSvelte from "../../hooks/useSvelte";
+import Counter from "./counter.svelte";
 
 export default function SvelteCounter({ initCount }: { initCount: number }) {
-  const SvelteCounter = useSvelte(Counter)
+  const SvelteCounter = useSvelte(Counter);
 
-  return <SvelteCounter initCount={initCount} />
+  return <SvelteCounter initCount={initCount} />;
 }
 ```
 
 5. Add to `App.tsx` and test it:
+
 ```tsx
-import { useState } from 'react'
-import { SvelteCounter } from './lib/components/counter'
+import { useState } from "react";
+import { SvelteCounter } from "./lib/components/counter";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
 
   return (
     <>
@@ -332,11 +342,12 @@ function App() {
       </button>
       <SvelteCounter initCount={0} />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
 ```
+
 ![svelte-in-react](./assets/svelte5-in-react.gif)
 
 You may have noticed an issue with this approach.
@@ -344,18 +355,24 @@ You may have noticed an issue with this approach.
 Due to React's rerendering behavior, the Svelte component gets remounted each time, which is not the desired outcome.
 
 To resolve this, let's add `memo` to `SvelteCounter`:
+
 ```tsx
 // src/lib/components/counter/svelte-counter.tsx
-import { memo } from 'react'
-import useSvelte from '../../hooks/useSvelte'
-import Counter from './counter.svelte'
+import { memo } from "react";
+import useSvelte from "../../hooks/useSvelte";
+import Counter from "./counter.svelte";
 
-export default memo(function SvelteCounter({ initCount }: { initCount: number }) {
-  const SvelteCounter = useSvelte(Counter)
+export default memo(function SvelteCounter({
+  initCount,
+}: {
+  initCount: number;
+}) {
+  const SvelteCounter = useSvelte(Counter);
 
-  return <SvelteCounter initCount={initCount} />
-})
+  return <SvelteCounter initCount={initCount} />;
+});
 ```
+
 It should work as expected now:
 ![svelte-in-react-fixed](./assets/svelte5-in-react-fixed.gif)
 
@@ -374,38 +391,91 @@ Once you've established a pattern for using Svelte components in React, you migh
 In our migration, we moved shared React components to a separate package within our monorepo, making them available to both applications. Here's how to set it up:
 
 1. First, we need to package the shared React components to make them available to both applications.
-> Please find the source code in `packages/react-components`. We use nodemon to watch the source files and rebuild the package when they change.
+
+   > Please find the source code in `packages/react-components`. We use nodemon to watch the source files and rebuild the package when they change.
 
 2. Run `npx sv create sveltekit` to create a new SvelteKit app in this monorepo.
 
-3. We use [svelte-preprocess-react](https://github.com/bfanger/svelte-preprocess-react/tree/main) to add React support to SvelteKit.
+3. We use a custom `use-react.svelte` component to add React support to SvelteKit.
+
 ```bash
 # in the sveltekit folder
-pnpm add -D svelte-preprocess-react react react-dom
+pnpm add react react-dom
 ```
-Add `svelte-preprocess-react` to `svelte.config.js`:
-```js
-import adapter from '@sveltejs/adapter-node'
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
-import preprocessReact from 'svelte-preprocess-react/preprocessReact'
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-  // Consult https://svelte.dev/docs/kit/integrations
-  // for more information about preprocessors
-  preprocess: [vitePreprocess(), preprocessReact()],
+Create the `use-react.svelte` component in `src/lib/components/`:
 
-  kit: {
-    // adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
-    // If your environment is not supported, or you settled on a specific environment, switch out the adapter.
-    // See https://svelte.dev/docs/kit/adapters for more information about adapters.
-    adapter: adapter()
-  }
-}
+```svelte
+<script lang="ts">
+  import { onMount } from "svelte";
+  import { createRoot } from "react-dom/client";
+  import React from "react";
 
-export default config
+  type Props = {
+    component: React.ComponentType<any>;
+    [key: string]: unknown;
+  };
+
+  let { component, ...reactProps }: Props = $props();
+
+  let container = $state<HTMLDivElement>();
+  let lastKey = $state<string>("");
+  let mounted = $state(false);
+  let root = $state<ReturnType<typeof createRoot>>();
+
+  // Create a unique key for this component instance
+  let currentKey = $derived(
+    JSON.stringify({
+      campaign: (reactProps.campaign as { uuid?: string })?.uuid,
+      layout: (reactProps.layout as { uuid?: string })?.uuid,
+    })
+  );
+
+  // Handle React rendering
+  $effect(() => {
+    if (!mounted || !container || !root) return;
+
+    if (currentKey !== lastKey) {
+      // Key changed - unmounting old React tree
+      root.unmount();
+
+      // Creating new React tree for key:
+      root = createRoot(container);
+      root.render(React.createElement(component, reactProps));
+      lastKey = currentKey;
+    } else {
+      // Same key, just update props
+      // Updating React props
+      root.render(React.createElement(component, reactProps));
+    }
+  });
+
+  onMount(() => {
+    mounted = true;
+
+    // Initial render
+    if (container) {
+      // Initial React render
+      root = createRoot(container);
+      root.render(React.createElement(component, reactProps));
+      lastKey = currentKey;
+    }
+
+    return () => {
+      // Svelte component unmounting - cleaning up React
+      if (root) {
+        root.unmount();
+      }
+      mounted = false;
+    };
+  });
+</script>
+
+<div class="contents" bind:this={container}></div>
 ```
+
 4. Add `react-components` to `package.json`:
+
 ```json
 {
   "dependencies": {
@@ -415,15 +485,16 @@ export default config
 ```
 
 5. Add React components to SvelteKit:
+
 ```tsx
 // packages/react-components/src/counter/index.tsx
-import { useState } from 'react'
+import { useState } from "react";
 
 export default function Counter({ initCount = 0 }: { initCount: number }) {
-  const [count, setCount] = useState(initCount)
+  const [count, setCount] = useState(initCount);
 
   function incrementCount() {
-    setCount((count) => count + 1)
+    setCount((count) => count + 1);
   }
 
   return (
@@ -431,25 +502,26 @@ export default function Counter({ initCount = 0 }: { initCount: number }) {
       <p>React counter: {count}</p>
       <button onClick={incrementCount}>+1</button>
     </>
-  )
+  );
 }
 ```
+
 ```svelte
 // apps/sveltekit/src/lib/components/react-counter.svelte
 <script lang="ts">
-  import { sveltify } from 'svelte-preprocess-react'
+  import UseReact from './use-react.svelte'
   import { Counter } from 'react-components'
 
-  const react = sveltify({ Counter })
   let initCount = $state(0)
 </script>
 
-<!-- In Svelte, you can use the shorthand {initCount} syntax -->
-<react.Counter {initCount} />
+<UseReact component={Counter} {initCount} />
 ```
+
 > You can use a react component library or use your own components.
 
 6. Add to `apps/sveltekit/src/routes/+page.svelte`:
+
 ```svelte
 <script lang="ts">
   import { ReactCounter } from '$lib/components'
@@ -457,6 +529,7 @@ export default function Counter({ initCount = 0 }: { initCount: number }) {
 
 <ReactCounter initCount={0} />
 ```
+
 ![react-in-sveltekit](./assets/react-in-sveltekit.gif)
 
 With both integration patterns working successfully in our codebase, we had established a solid foundation for our migration strategy. These technical approaches allowed us to move at our own pace while maintaining a fully functional application throughout the process.
@@ -489,6 +562,7 @@ For teams considering a similar transition, remember that technology migrations 
 In our case, what began as a cautious experiment has evolved into a transformative upgrade for our product. The most important lesson? Focus less on the technology itself and more on the incremental process that makes change sustainable.
 
 Thank you for reading! If you found this guide helpful, consider:
+
 - Following me on [X](https://x.com/davipon) or [Bluesky](https://bsky.app/profile/davipon.bsky.social) for updates
 - Starring the repo and sharing with others who might find it helpful
 
