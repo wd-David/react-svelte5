@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incremental Migration: React to Svelte 5</title>
+    <style>
+        :root {
+            --bg: #0f0f0f;
+            --text: #ffffff;
+            --accent: #ff3e00;
+            --secondary: #40b3ff;
+            --code-bg: #1e1e1e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
+        
+        .slides-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.5s ease-in-out;
+        }
+        
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .slide.prev {
+            transform: translateX(-100%);
+        }
+        
+        h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            text-align: center;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+        
+        h2 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: var(--accent);
+            text-align: center;
+        }
+        
+        h3 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--secondary);
+        }
+        
+        .subtitle {
+            font-size: 1.5rem;
+            color: #999;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+        
+        .content {
+            max-width: 1000px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        ul {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        li {
+            font-size: 1.8rem;
+            line-height: 2.5rem;
+            margin-bottom: 1.5rem;
+            padding-left: 2rem;
+            position: relative;
+        }
+        
+        li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .highlight {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        
+        .code-block {
+            background: transparent;
+            border-radius: 12px;
+            margin: 2rem 0;
+            text-align: left;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+        
+        .code-block pre {
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Shiki overrides */
+        .shiki {
+            background-color: var(--code-bg) !important;
+            padding: 1.5rem !important;
+            font-size: 1.1rem !important;
+            line-height: 1.6 !important;
+            overflow-x: auto;
+        }
+        
+        /* Loading state for code blocks */
+        .code-loading {
+            background: var(--code-bg);
+            padding: 2rem;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 1.2rem;
+            line-height: 1.8rem;
+            color: #666;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .metric {
+            background: var(--code-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+        
+        .metric-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-label {
+            font-size: 1.2rem;
+            color: #999;
+        }
+        
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin: 2rem 0;
+        }
+        
+        .comparison-item {
+            background: var(--code-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+        
+        .comparison-item h4 {
+            color: var(--secondary);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .warning {
+            background: #ff3e0020;
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            font-size: 1.4rem;
+        }
+        
+        .navigation {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+        
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 62, 0, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .slide-number {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            color: #666;
+            font-size: 1.2rem;
+        }
+        
+        .diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        
+        .diagram-box {
+            background: var(--code-bg);
+            padding: 2rem 3rem;
+            border-radius: 12px;
+            border: 2px solid #333;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .arrow {
+            font-size: 2rem;
+            color: var(--accent);
+        }
+        
+        .section-divider {
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            margin: 3rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="slides-container">
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <div class="content">
+                <h1>Incremental Migration:<br/>React → Svelte 5</h1>
+                <p class="subtitle">A Practical Guide from Production Experience</p>
+                <div class="section-divider"></div>
+                <p style="font-size: 1.2rem; color: #999;">David @ dipp | 30 min</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: The Problem -->
+        <div class="slide">
+            <div class="content">
+                <h2>Why Consider Migration?</h2>
+                <ul>
+                    <li><span class="highlight">80%</span> JavaScript codebase (no TypeScript)</li>
+                    <li><span class="highlight">Performance bottleneck</span> in graphic editor</li>
+                    <li><span class="highlight">React re-renders</span> killing real-time editing</li>
+                    <li><span class="highlight">Weeks of optimization</span> yielded minimal gains</li>
+                </ul>
+                <div class="warning">
+                    ⚠️ Complete rewrites fail. We need incremental approach.
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Business Reality -->
+        <div class="slide">
+            <div class="content">
+                <h2>The Business Conversation</h2>
+                <div class="comparison">
+                    <div class="comparison-item">
+                        <h4>❌ Traditional Approach</h4>
+                        <p>"6 month rewrite"</p>
+                        <p>"Stop all features"</p>
+                        <p>"Big bang release"</p>
+                    </div>
+                    <div class="comparison-item">
+                        <h4>✅ Our Approach</h4>
+                        <p>"Ship weekly"</p>
+                        <p>"Measure each step"</p>
+                        <p>"Prove value incrementally"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Strategy -->
+        <div class="slide">
+            <div class="content">
+                <h2>Migration Strategy</h2>
+                <div class="diagram">
+                    <div class="diagram-box">Modal</div>
+                    <span class="arrow">→</span>
+                    <div class="diagram-box">Route</div>
+                    <span class="arrow">→</span>
+                    <div class="diagram-box">Page</div>
+                    <span class="arrow">→</span>
+                    <div class="diagram-box">App</div>
+                </div>
+                <h3>Start Small, Think Big</h3>
+                <ul>
+                    <li>Test with <span class="highlight">isolated components</span></li>
+                    <li>Prove <span class="highlight">technical feasibility</span></li>
+                    <li>Build <span class="highlight">team confidence</span></li>
+                    <li>Demonstrate <span class="highlight">business value</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 5: Results -->
+        <div class="slide">
+            <div class="content">
+                <h2>Measurable Results</h2>
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-value">-23%</div>
+                        <div class="metric-label">Bundle Size</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">-50%</div>
+                        <div class="metric-label">Dev Time</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">+28%</div>
+                        <div class="metric-label">Lighthouse Score</div>
+                    </div>
+                </div>
+                <p style="font-size: 1.4rem; margin-top: 2rem; color: #999;">
+                    Focus on user-facing metrics, not just technical ones
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 6: Technical Pattern 1 -->
+        <div class="slide">
+            <div class="content">
+                <h2>Pattern 1: Svelte in React</h2>
+                <h3>useSvelte Hook</h3>
+                <div class="code-block">
+                    <code class="code-loading" data-lang="tsx">// 1. Install dependencies
+pnpm add -D svelte @sveltejs/vite-plugin-svelte
+
+// 2. Create wrapper hook
+export default function useSvelte(Component: Component) {
+  const svelteRef = useRef<HTMLDivElement>(null);
+  
+  return (props: Props) => {
+    useLayoutEffect(() => {
+      mount(Component, {
+        target: svelteRef.current,
+        props,
+      });
+    }, []);
+    
+    return <div ref={svelteRef}></div>;
+  };
+}
+
+// 3. Use with memo for performance
+export default memo(function MyComponent(props) {
+  const SvelteComponent = useSvelte(Component);
+  return <SvelteComponent {...props} />;
+});</code>
+                </div>
+                <p class="highlight" style="margin-top: 2rem;">
+                    Key: Use memo() to prevent unnecessary remounts
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 7: Technical Pattern 2 -->
+        <div class="slide">
+            <div class="content">
+                <h2>Pattern 2: React in SvelteKit</h2>
+                <h3>use-react.svelte Component</h3>
+                <div class="code-block">
+                    <code class="code-loading" data-lang="svelte">&lt;script lang="ts"&gt;
+  import { onMount } from "svelte";
+  import { createRoot } from "react-dom/client";
+  import React from "react";
+  
+  let { component, ...reactProps } = $props();
+  let container = $state&lt;HTMLDivElement&gt;();
+  let root = $state&lt;ReturnType&lt;typeof createRoot&gt;&gt;();
+  
+  onMount(() => {
+    if (container) {
+      root = createRoot(container);
+      root.render(React.createElement(component, reactProps));
+    }
+    
+    return () => root?.unmount();
+  });
+&lt;/script&gt;
+
+&lt;div bind:this={container}&gt;&lt;/div&gt;</code>
+                </div>
+                <div class="code-block" style="margin-top: 1rem;">
+                    <code class="code-loading" data-lang="svelte">&lt;!-- Usage --&gt;
+&lt;script&gt;
+  import UseReact from './use-react.svelte'
+  import { Counter } from 'react-components'
+&lt;/script&gt;
+
+&lt;UseReact component={Counter} initCount={0} /&gt;</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: State Management -->
+        <div class="slide">
+            <div class="content">
+                <h2>Modern State Pattern</h2>
+                <h3>Classes + Context + Runes</h3>
+                <div class="code-block">
+                    <code class="code-loading" data-lang="typescript">// my-state.svelte.ts
+import { FiniteStateMachine, watch, resource } from 'runed'
+
+export class MyState extends FiniteStateMachine<States, Events> {
+  readonly myResource: ResourceReturn
+  
+  constructor(getter: () => string) {
+    super("off", {
+      off: { toggle: "on" },
+      on: { toggle: "off" }
+    })
+    
+    // Use watch instead of $effect for better control
+    watch(getter, () => {})
+    
+    // Or use resource for async operations
+    this.myResource = resource(getter, async () => {})
+  }
+}
+
+// Context API for sharing
+const KEY = Symbol('my-state');
+export const setMyState = (g) => setContext(KEY, new MyState(g));
+export const getMyState = () => getContext&lt;MyState&gt;(KEY);</code>
+                </div>
+                <p style="margin-top: 2rem; color: #999;">
+                    Pattern inspired by @huntabyte's "Classes + Context"
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 9: Challenges -->
+        <div class="slide">
+            <div class="content">
+                <h2>Real Challenges</h2>
+                <ul>
+                    <li><span class="highlight">Ecosystem maturity</span> - Libraries catching up</li>
+                    <li><span class="highlight">Mental model shift</span> - From re-renders to reactivity</li>
+                    <li><span class="highlight">Team learning curve</span> - Unlearning React patterns</li>
+                    <li><span class="highlight">Best practices</span> - Creating as we go</li>
+                </ul>
+                <div class="warning">
+                    💡 These are temporary growing pains, not blockers
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: Key Takeaways -->
+        <div class="slide">
+            <div class="content">
+                <h2>Key Takeaways</h2>
+                <ul>
+                    <li><span class="highlight">Start with low-risk components</span></li>
+                    <li><span class="highlight">Measure everything</span> - Bundle, performance, DX</li>
+                    <li><span class="highlight">Communicate business value</span> not tech details</li>
+                    <li><span class="highlight">Give team time to adapt</span> - It's a paradigm shift</li>
+                    <li><span class="highlight">Focus on incremental wins</span> not perfection</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 11: Resources -->
+        <div class="slide">
+            <div class="content">
+                <h2>Resources</h2>
+                <ul>
+                    <li>🔗 <span class="highlight">github.com/wd-David/react-svelte5</span></li>
+                    <li>📚 Official Svelte 5 Tutorial</li>
+                    <li>🎥 "Don't Sleep on Svelte 5" - @huntabyte</li>
+                    <li>🎓 "Svelte 5 Basics" - Syntax.fm</li>
+                    <li>🔄 Component Party - Side-by-side comparisons</li>
+                </ul>
+                <div class="section-divider"></div>
+                <p style="font-size: 1.4rem; margin-top: 2rem;">
+                    Twitter/X: @davipon | Bluesky: davipon.bsky.social
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 12: Q&A -->
+        <div class="slide">
+            <div class="content">
+                <h1>Questions?</h1>
+                <p class="subtitle">Let's discuss your migration challenges</p>
+                <div class="section-divider"></div>
+                <p style="font-size: 1.2rem; color: #999;">
+                    Remember: Technology migrations don't have to be all-or-nothing
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button id="prevBtn">Previous</button>
+        <button id="nextBtn">Next</button>
+    </div>
+
+    <div class="slide-number">
+        <span id="currentSlide">1</span> / <span id="totalSlides">12</span>
+    </div>
+
+    <script>
+        // Slide navigation (non-module script for immediate execution)
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        document.getElementById('totalSlides').textContent = totalSlides;
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active', 'prev');
+                if (i < index) slide.classList.add('prev');
+                if (i === index) slide.classList.add('active');
+            });
+            
+            document.getElementById('currentSlide').textContent = index + 1;
+            document.getElementById('prevBtn').disabled = index === 0;
+            document.getElementById('nextBtn').disabled = index === totalSlides - 1;
+        }
+
+        function changeSlide(direction) {
+            const newIndex = currentSlide + direction;
+            if (newIndex >= 0 && newIndex < totalSlides) {
+                currentSlide = newIndex;
+                showSlide(currentSlide);
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+        });
+
+        // Button navigation
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('prevBtn').addEventListener('click', () => changeSlide(-1));
+            document.getElementById('nextBtn').addEventListener('click', () => changeSlide(1));
+        });
+
+        // Initialize first slide
+        showSlide(0);
+    </script>
+
+    <script type="module">
+        // Import from the correct CDN URL with specific version
+        import { codeToHtml } from 'https://esm.sh/shiki@3.0.0';
+        
+        // Initialize syntax highlighting
+        async function initSyntaxHighlighting() {
+            try {
+                // Find all code blocks
+                const codeBlocks = document.querySelectorAll('.code-block code');
+                
+                for (const block of codeBlocks) {
+                    const code = block.textContent.trim();
+                    const lang = block.dataset.lang || 'typescript';
+                    
+                    try {
+                        // Use codeToHtml which loads themes/langs on demand
+                        const html = await codeToHtml(code, {
+                            lang: lang,
+                            theme: 'vitesse-dark'
+                        });
+                        
+                        // Replace the code block content
+                        block.parentElement.innerHTML = html;
+                    } catch (error) {
+                        console.error('Failed to highlight code block:', error);
+                        // Keep the original styling if highlighting fails
+                        block.classList.remove('code-loading');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to initialize syntax highlighter:', error);
+                // Remove loading state even if highlighting fails
+                document.querySelectorAll('.code-loading').forEach(block => {
+                    block.classList.remove('code-loading');
+                });
+            }
+        }
+
+        // Initialize highlighting when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initSyntaxHighlighting);
+        } else {
+            // DOM is already loaded
+            initSyntaxHighlighting();
+        }
+    </script>
+</body>
+</html>
