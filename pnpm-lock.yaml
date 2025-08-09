@@ -7,7 +7,11 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    dependencies:
+      vite:
+        specifier: ^7.0.6
+        version: 7.0.6(@types/node@24.1.0)(less@4.3.0)(sass@1.86.3)(stylus@0.62.0)
 
   apps/react-vite:
     dependencies:

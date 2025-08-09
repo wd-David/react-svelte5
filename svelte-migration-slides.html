@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Incremental Migration: React to Svelte 5</title>
     <style>
         :root {
@@ -24,6 +24,8 @@
             background: var(--bg);
             color: var(--text);
             overflow: hidden;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .slides-container {
@@ -41,10 +43,12 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 3rem;
+            padding: 2rem;
             opacity: 0;
             transform: translateX(100%);
             transition: all 0.5s ease-in-out;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         
         .slide.active {
@@ -57,43 +61,48 @@
         }
         
         h1 {
-            font-size: 4rem;
+            font-size: clamp(2rem, 8vw, 4rem);
             font-weight: 800;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             text-align: center;
             background: linear-gradient(135deg, var(--accent) 0%, var(--secondary) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             text-fill-color: transparent;
+            line-height: 1.2;
         }
         
         h2 {
-            font-size: 3rem;
+            font-size: clamp(1.5rem, 6vw, 3rem);
             font-weight: 700;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             color: var(--accent);
             text-align: center;
+            line-height: 1.3;
         }
         
         h3 {
-            font-size: 2rem;
+            font-size: clamp(1.2rem, 4vw, 2rem);
             font-weight: 600;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
             color: var(--secondary);
+            line-height: 1.4;
         }
         
         .subtitle {
-            font-size: 1.5rem;
+            font-size: clamp(1rem, 3vw, 1.5rem);
             color: #999;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
             text-align: center;
+            line-height: 1.4;
         }
         
         .content {
             max-width: 1000px;
             width: 100%;
             text-align: center;
+            padding: 0 1rem;
         }
         
         ul {
@@ -105,10 +114,10 @@
         }
         
         li {
-            font-size: 1.8rem;
-            line-height: 2.5rem;
-            margin-bottom: 1.5rem;
-            padding-left: 2rem;
+            font-size: clamp(1rem, 3.5vw, 1.8rem);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
             position: relative;
         }
         
@@ -127,8 +136,8 @@
         
         .code-block {
             background: transparent;
-            border-radius: 12px;
-            margin: 2rem 0;
+            border-radius: 8px;
+            margin: 1.5rem 0;
             text-align: left;
             overflow: hidden;
             border: 1px solid #333;
@@ -142,95 +151,133 @@
         /* Shiki overrides */
         .shiki {
             background-color: var(--code-bg) !important;
-            padding: 1.5rem !important;
-            font-size: 1.1rem !important;
-            line-height: 1.6 !important;
+            padding: 1rem !important;
+            font-size: clamp(0.8rem, 2.5vw, 1.1rem) !important;
+            line-height: 1.5 !important;
             overflow-x: auto;
         }
         
         /* Loading state for code blocks */
         .code-loading {
             background: var(--code-bg);
-            padding: 2rem;
+            padding: 1rem;
             font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-            font-size: 1.2rem;
-            line-height: 1.8rem;
+            font-size: clamp(0.8rem, 2.5vw, 1.2rem);
+            line-height: 1.5;
             color: #666;
+            overflow-x: auto;
         }
         
         .metrics {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
-            margin: 2rem 0;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
         }
         
         .metric {
             background: var(--code-bg);
-            padding: 2rem;
-            border-radius: 12px;
+            padding: 1.5rem;
+            border-radius: 8px;
             border: 1px solid #333;
         }
         
         .metric-value {
-            font-size: 3rem;
+            font-size: clamp(1.5rem, 6vw, 3rem);
             font-weight: 800;
             color: var(--accent);
             margin-bottom: 0.5rem;
         }
         
         .metric-label {
-            font-size: 1.2rem;
+            font-size: clamp(0.8rem, 2.5vw, 1.2rem);
             color: #999;
         }
         
         .comparison {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 3rem;
-            margin: 2rem 0;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin: 3rem auto;
+            max-width: 1200px;
+        }
+        
+        @media (min-width: 768px) {
+            .comparison {
+                grid-template-columns: 1fr 1fr;
+                gap: 3rem;
+            }
         }
         
         .comparison-item {
             background: var(--code-bg);
-            padding: 2rem;
+            padding: 3rem 2.5rem;
             border-radius: 12px;
-            border: 1px solid #333;
+            border: 2px solid #333;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         
         .comparison-item h4 {
             color: var(--secondary);
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 700;
+        }
+        
+        .comparison-item p {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            margin: 1rem 0;
+            line-height: 1.4;
         }
         
         .warning {
             background: #ff3e0020;
             border: 2px solid var(--accent);
-            border-radius: 12px;
-            padding: 2rem;
-            margin: 2rem 0;
-            font-size: 1.4rem;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            font-size: clamp(1rem, 3vw, 1.4rem);
         }
         
         .navigation {
             position: fixed;
-            bottom: 2rem;
-            right: 2rem;
+            bottom: 1rem;
+            right: 1rem;
             display: flex;
-            gap: 1rem;
+            gap: 0.5rem;
             z-index: 100;
+        }
+        
+        @media (min-width: 768px) {
+            .navigation {
+                bottom: 2rem;
+                right: 2rem;
+                gap: 1rem;
+            }
         }
         
         button {
             background: var(--accent);
             color: white;
             border: none;
-            padding: 0.8rem 1.5rem;
+            padding: 0.8rem 1rem;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.2s;
+            min-width: 60px;
+            min-height: 44px;
+            touch-action: manipulation;
+        }
+        
+        @media (min-width: 768px) {
+            button {
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
+            }
         }
         
         button:hover {
@@ -245,39 +292,833 @@
         
         .slide-number {
             position: fixed;
-            bottom: 2rem;
-            left: 2rem;
+            bottom: 1rem;
+            left: 1rem;
             color: #666;
-            font-size: 1.2rem;
+            font-size: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .slide-number {
+                bottom: 2rem;
+                left: 2rem;
+                font-size: 1.2rem;
+            }
         }
         
         .diagram {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            gap: 2rem;
-            margin: 3rem 0;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        @media (min-width: 768px) {
+            .diagram {
+                flex-direction: row;
+                gap: 2rem;
+                margin: 3rem 0;
+            }
         }
         
         .diagram-box {
             background: var(--code-bg);
-            padding: 2rem 3rem;
-            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
             border: 2px solid #333;
-            font-size: 1.5rem;
+            font-size: clamp(1rem, 3vw, 1.5rem);
             font-weight: 600;
+            text-align: center;
+        }
+        
+        @media (min-width: 768px) {
+            .diagram-box {
+                padding: 2rem 3rem;
+            }
         }
         
         .arrow {
-            font-size: 2rem;
+            font-size: clamp(1.5rem, 4vw, 2rem);
             color: var(--accent);
+            transform: rotate(90deg);
+        }
+        
+        @media (min-width: 768px) {
+            .arrow {
+                transform: rotate(0deg);
+            }
         }
         
         .section-divider {
             width: 100%;
             height: 2px;
             background: linear-gradient(90deg, transparent, var(--accent), transparent);
-            margin: 3rem 0;
+            margin: 2rem 0;
+        }
+        
+        .qr-code {
+            margin: 2rem auto;
+            text-align: center;
+        }
+        
+        .qr-code img {
+            width: 120px;
+            height: 120px;
+            border-radius: 8px;
+            border: 2px solid #333;
+        }
+        
+        @media (min-width: 768px) {
+            .qr-code img {
+                width: 250px;
+                height: 250px;
+            }
+        }
+        
+        .qr-code p {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #999;
+        }
+        
+        .svelte-summit-intro {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .svelte-summit-photos {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        @media (min-width: 768px) {
+            .svelte-summit-photos {
+                grid-template-columns: 1fr 1fr;
+                gap: 3rem;
+                max-width: 900px;
+            }
+        }
+        
+        .svelte-summit-photo {
+            background: var(--code-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 2px solid #333;
+            text-align: center;
+        }
+        
+        .svelte-summit-photo img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .svelte-summit-photo p {
+            font-size: clamp(0.8rem, 2.5vw, 1rem);
+            color: #999;
+            margin: 0;
+        }
+        
+        .intro-text {
+            font-size: clamp(1rem, 3vw, 1.3rem);
+            line-height: 1.6;
+            color: #ccc;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        /* Polaroid collage for summit photos */
+        .collage {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+            width: min(85vw, 800px);
+            height: clamp(400px, 60vw, 600px);
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .polaroid {
+            --r: 0deg;
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 8px 8px 42px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transform: rotate(var(--r));
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            justify-self: center;
+            align-self: center;
+            width: 100%;
+            max-width: 280px;
+            z-index: 1;
+        }
+        
+        .polaroid img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 4px;
+            display: block;
+        }
+        
+        .polaroid figcaption {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #111;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            font-size: clamp(0.8rem, 2vw, 0.95rem);
+        }
+        
+        .polaroid.left {
+            --r: -6deg;
+        }
+        
+        .polaroid.right {
+            --r: 6deg;
+        }
+
+        .polaroid.top-left {
+            grid-column: 1;
+            grid-row: 1;
+            --r: -8deg;
+        }
+        
+        .polaroid.top-right {
+            grid-column: 2;
+            grid-row: 1;
+            --r: 6deg;
+        }
+
+        .polaroid.bottom-left {
+            grid-column: 1;
+            grid-row: 2;
+            --r: 4deg;
+        }
+        
+        .polaroid.bottom-right {
+            grid-column: 2;
+            grid-row: 2;
+            --r: -7deg;
+        }
+        
+        @media (hover: hover) {
+            .polaroid { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+            .polaroid:hover { transform: rotate(var(--r)) scale(1.03); box-shadow: 0 14px 40px rgba(0,0,0,0.55); z-index: 2; }
+        }
+        
+        @media (max-width: 768px) {
+            .collage { 
+                gap: 15px;
+                padding: 15px;
+                height: clamp(500px, 80vw, 700px);
+                width: min(95vw, 600px);
+            }
+            .polaroid { 
+                max-width: 220px;
+            }
+            .polaroid img {
+                height: 160px;
+            }
+            .polaroid figcaption {
+                font-size: clamp(0.75rem, 3vw, 0.9rem);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .collage { 
+                gap: 10px;
+                padding: 10px;
+                height: clamp(400px, 90vw, 600px);
+            }
+            .polaroid { 
+                max-width: 160px;
+                padding: 6px 6px 32px;
+            }
+            .polaroid img {
+                height: 120px;
+            }
+            .polaroid figcaption {
+                font-size: clamp(0.7rem, 3.5vw, 0.85rem);
+                bottom: 6px;
+            }
+        }
+        
+        /* Bluesky post slide styles */
+        .bluesky-post-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+        
+        .bluesky-post {
+            max-width: 90vw;
+            max-height: 80vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .bluesky-post:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        .post-highlight {
+            text-align: center;
+            margin-top: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .post-highlight p {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #ff3e00;
+        }
+        
+        .post-highlight blockquote {
+            font-size: 1.5rem;
+            font-style: italic;
+            font-weight: 600;
+            color: #ffffff;
+            background: linear-gradient(135deg, #ff3e00, #ff8c00);
+            padding: 1.5rem 2rem;
+            border-radius: 12px;
+            border-left: 4px solid #ffffff;
+            margin: 0;
+            position: relative;
+        }
+        
+        .post-highlight blockquote::before {
+            content: '"';
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.3);
+            position: absolute;
+            top: -0.5rem;
+            left: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .bluesky-post-container {
+                padding: 0.5rem;
+            }
+            
+            .bluesky-post {
+                max-width: 95vw;
+                max-height: 85vh;
+            }
+        }
+        
+        /* Migration meme slide styles */
+        .meme-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+        
+        .migration-meme {
+            max-width: 90vw;
+            max-height: 80vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .migration-meme:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .meme-container {
+                padding: 0.5rem;
+            }
+            
+            .migration-meme {
+                max-width: 95vw;
+                max-height: 85vh;
+            }
+        }
+        
+                /* Centered bullet points for specific slides */
+        .slide:nth-child(4) .content ul,  /* Slide 4: Why Consider Migration? */
+        .slide:nth-child(11) .content ul, /* Slide 11: Strategy */
+        .slide:nth-child(15) .content ul, /* Slide 15: Challenges */
+        .slide:nth-child(16) .content ul  /* Slide 16: Key Takeaways */
+        {
+            max-width: 800px;
+            margin: 2rem auto;
+            display: inline-block;
+            text-align: left;
+        }
+        
+        .slide:nth-child(2) .content,     /* Slide 2: Introduction */
+        .slide:nth-child(4) .content,     /* Slide 4: Why Consider Migration? */
+        .slide:nth-child(8) .content,     /* Slide 8: Mental Model Shift */
+        .slide:nth-child(11) .content,    /* Slide 11: Strategy */
+        .slide:nth-child(15) .content,    /* Slide 15: Challenges */
+        .slide:nth-child(16) .content,    /* Slide 16: Key Takeaways */
+        .slide:nth-child(17) .content {   /* Slide 17: Connect & Code (personal info) */
+            text-align: center;
+        }
+        
+        /* Mental models comparison slide styles */
+        .mental-models-comparison {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            gap: 2rem;
+            margin: 2rem auto;
+            max-width: 1000px;
+        }
+        
+        .mental-model-container {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .mental-model-container h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: #ff3e00;
+        }
+        
+        .mental-model-image {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .mental-model-image:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .mental-models-comparison {
+                flex-direction: column;
+                gap: 2rem;
+                margin: 1.5rem auto;
+            }
+            
+            .mental-model-container h3 {
+                font-size: 1.5rem;
+                margin-bottom: 1rem;
+            }
+            
+            .mental-model-image {
+                max-width: 90vw;
+            }
+        }
+        
+        /* Personal info and repo slide styles */
+        .personal-info-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 3rem;
+            margin: 2rem auto;
+            max-width: 900px;
+        }
+        
+        .personal-section {
+            flex: 1;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .avatar-container {
+            margin-bottom: 1.5rem;
+        }
+        
+        .avatar-image {
+            width: 330px;
+            height: auto;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 4px solid #ff3e00;
+            box-shadow: 0 8px 32px rgba(255, 62, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .avatar-image:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 40px rgba(255, 62, 0, 0.4);
+        }
+        
+        .social-links p {
+            font-size: 1.2rem;
+            margin: 0.5rem 0;
+            color: #ffffff;
+        }
+        
+        .repo-section {
+            flex: 1;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .repo-section h3 {
+            font-size: 1.5rem;
+            color: #ff3e00;
+            margin-bottom: 1.5rem;
+        }
+        
+        .repo-qr-container {
+            margin-bottom: 1rem;
+        }
+        
+        .repo-qr {
+            width: 240px;
+            height: 240px;
+            border-radius: 12px;
+            background: white;
+            padding: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .repo-qr:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        .repo-text {
+            font-size: 1.1rem;
+            color: #cccccc;
+            margin-top: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .personal-info-container {
+                flex-direction: column;
+                gap: 2rem;
+                text-align: center;
+            }
+            
+            .avatar-image {
+                width: 180px;
+                height: auto;
+            }
+            
+            .repo-qr {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .social-links p {
+                font-size: 1.1rem;
+            }
+            
+            .repo-section h3 {
+                font-size: 1.3rem;
+            }
+        }
+        
+        /* Introduction slide styles */
+        .intro-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3rem;
+            margin: 2rem auto;
+            max-width: 1100px;
+            width: 90%;
+        }
+        
+        .intro-avatar {
+            flex-shrink: 0;
+        }
+        
+        .intro-avatar-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #ff3e00;
+            box-shadow: 0 8px 32px rgba(255, 62, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .intro-avatar-image:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 40px rgba(255, 62, 0, 0.4);
+        }
+        
+        .intro-text {
+            flex: 1;
+            text-align: left;
+        }
+        
+        .intro-text h3 {
+            font-size: 2.5rem;
+            color: #ff3e00;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .intro-details p {
+            font-size: 1.3rem;
+            margin: 1rem 0;
+            color: #ffffff;
+            line-height: 1.4;
+            white-space: nowrap;
+        }
+        
+        @media (max-width: 768px) {
+            .intro-container {
+                flex-direction: column;
+                text-align: center;
+                gap: 2rem;
+            }
+            
+            .intro-avatar-image {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .intro-text {
+                text-align: center;
+            }
+            
+            .intro-text h3 {
+                font-size: 2rem;
+                margin-bottom: 1rem;
+            }
+            
+            .intro-details p {
+                font-size: 1.1rem;
+                white-space: normal;
+            }
+        }
+        
+        /* Ryan slide styles */
+        .ryan-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+        
+        .ryan-image {
+            max-width: 90vw;
+            max-height: 80vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .ryan-image:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .ryan-container {
+                padding: 0.5rem;
+            }
+            
+            .ryan-image {
+                max-width: 95vw;
+                max-height: 85vh;
+            }
+        }
+        
+        /* React Scan slide styles */
+        .react-scan-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+        
+        .react-scan-gif {
+            max-width: 95vw;
+            max-height: 95vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .react-scan-gif:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .react-scan-container {
+                padding: 0.5rem;
+            }
+            
+            .react-scan-gif {
+                max-width: 95vw;
+                max-height: 85vh;
+            }
+        }
+        
+        /* Pattern demo container styles */
+        .pattern-demo-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .pattern-demo-container .code-block {
+            flex: 3;
+            min-width: 0;
+            margin: 0;
+        }
+        
+        .demo-gif-container {
+            flex: 0 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-width: 300px;
+            max-width: 350px;
+        }
+        
+        .demo-gif {
+            max-width: 320px;
+            max-height: 360px;
+            width: auto;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            object-fit: contain;
+        }
+        
+        @media (max-width: 1200px) {
+            .pattern-demo-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 1.5rem;
+            }
+            
+            .demo-gif-container {
+                min-width: unset;
+                width: 100%;
+            }
+            
+            .demo-gif {
+                max-width: 90%;
+                max-height: 250px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .pattern-demo-container {
+                gap: 1rem;
+                padding: 0 1rem;
+            }
+            
+            .pattern-demo-container .code-block {
+                width: 100%;
+                max-width: calc(100vw - 2rem);
+                overflow-x: auto;
+                font-size: 0.8rem;
+            }
+            
+            .pattern-demo-container .code-block code {
+                font-size: 0.8rem;
+                white-space: pre;
+                word-break: normal;
+                overflow-wrap: normal;
+            }
+            
+            .demo-gif {
+                max-width: 95%;
+                max-height: 200px;
+            }
+        }
+        
+        /* Touch-friendly swipe area */
+        .swipe-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 50;
+            pointer-events: none;
+        }
+        
+        .swipe-area.active {
+            pointer-events: auto;
+        }
+        
+        /* Mobile-specific adjustments */
+        @media (max-width: 767px) {
+            .slide {
+                padding: 1rem;
+            }
+            
+            .content {
+                padding: 0 0.5rem;
+            }
+            
+            .code-block {
+                margin: 1rem 0;
+            }
+            
+            .warning {
+                padding: 1rem;
+                margin: 1rem 0;
+            }
         }
     </style>
 </head>
@@ -289,27 +1130,130 @@
                 <h1>Incremental Migration:<br/>React → Svelte 5</h1>
                 <p class="subtitle">A Practical Guide from Production Experience</p>
                 <div class="section-divider"></div>
-                <p style="font-size: 1.2rem; color: #999;">David @ dipp | 30 min</p>
-            </div>
-        </div>
-
-        <!-- Slide 2: The Problem -->
-        <div class="slide">
-            <div class="content">
-                <h2>Why Consider Migration?</h2>
-                <ul>
-                    <li><span class="highlight">80%</span> JavaScript codebase (no TypeScript)</li>
-                    <li><span class="highlight">Performance bottleneck</span> in graphic editor</li>
-                    <li><span class="highlight">React re-renders</span> killing real-time editing</li>
-                    <li><span class="highlight">Weeks of optimization</span> yielded minimal gains</li>
-                </ul>
-                <div class="warning">
-                    ⚠️ Complete rewrites fail. We need incremental approach.
+                <div class="qr-code">
+                    <img src="assets/slides-qr-code.png" alt="QR Code for slides" />
+                    <p>Scan for slides</p>
                 </div>
             </div>
         </div>
 
-        <!-- Slide 3: Business Reality -->
+        <!-- Slide 2: Introduction -->
+        <div class="slide">
+            <div class="content">
+                <h2>Hello! 👋</h2>
+                <div class="intro-container">
+                    <div class="intro-avatar">
+                        <img src="assets/Avatar.jpg" alt="David's Avatar" class="intro-avatar-image" />
+                    </div>
+                    <div class="intro-text">
+                        <h3>I'm David</h3>
+                        <div class="intro-details">
+                            <p>🎯 Product Manager at <span class="highlight">dipp</span></p>
+                            <p>🛠️ Engineering Lead for the past 2 years</p>
+                            <p>🌟 Contributing to <span class="highlight">esbuild, vite</span> and <span class="highlight">Svelte ecosystem</span> since 2021</p>
+                            <p>📦 Authored <span class="highlight">esbuild-plugin-pino</span> which has <span class="highlight">70k weekly downloads</span> on npm</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Svelte Summit Intro -->
+        <div class="slide">
+            <div class="content">
+                <h2>Svelte Summit 2025</h2>
+                <div class="svelte-summit-intro">
+                    <div class="collage">
+                        <figure class="polaroid top-left">
+                            <img src="assets/svelte summit core team.jpg" alt="Svelte Summit Core Team" />
+                            <figcaption>Core Team</figcaption>
+                        </figure>
+                        <figure class="polaroid top-right">
+                            <img src="assets/svelte summit group photo.PNG" alt="Svelte Summit Group Photo" />
+                            <figcaption>Community</figcaption>
+                        </figure>
+                        <figure class="polaroid bottom-left">
+                            <img src="assets/svelte-asia.jpg" alt="Svelte Asia" />
+                            <figcaption>Svelte Asia</figcaption>
+                        </figure>
+                        <figure class="polaroid bottom-right">
+                            <img src="assets/scott.jpg" alt="Scott" />
+                            <figcaption>Scott @syntax.fm</figcaption>
+                        </figure>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Migration Reality -->
+        <div class="slide">
+            <div class="content">
+                <div class="meme-container">
+                    <img src="assets/migration-meme.png" alt="Migration Reality Meme" class="migration-meme" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Why Consider Migration? -->
+        <div class="slide">
+            <div class="content">
+                <h2>Why Consider Migration?</h2>
+                <ul>
+                    <li><span class="highlight">80%</span> JavaScript codebase (no tests)</li>
+                    <li><span class="highlight">Performance bottleneck</span> in graphic editor</li>
+                    <li><span class="highlight">Months of optimization</span> yielded limited gains</li>
+                </ul>
+                <div class="warning">
+                    ⚠️ Complete rewrites are not an option. We need incremental approach.
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: React Scan Demo -->
+        <div class="slide">
+            <div class="content">
+                <div class="react-scan-container">
+                    <img src="assets/react-scan.gif" alt="React Scan Performance Demo" class="react-scan-gif" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Ryan Carniato -->
+        <div class="slide">
+            <div class="content">
+                <div class="ryan-container">
+                    <img src="assets/ryan.png" alt="Ryan Carniato" class="ryan-image" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Mental Model Shift -->
+        <div class="slide">
+            <div class="content">
+                <h2>Mental Model Shift</h2>
+                <div class="mental-models-comparison">
+                    <div class="mental-model-container">
+                        <h3>React</h3>
+                        <img src="assets/react-mental-model.jpeg" alt="React Mental Model" class="mental-model-image" />
+                    </div>
+                    <div class="mental-model-container">
+                        <h3>Svelte</h3>
+                        <img src="assets/svelte-mental-model.jpeg" alt="Svelte Mental Model" class="mental-model-image" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Community Recognition -->
+        <div class="slide">
+            <div class="content">
+                <div class="bluesky-post-container">
+                    <img src="assets/bluesky-post.png" alt="Rich Harris Bluesky Post about Svelte Performance" class="bluesky-post" />
+                    </div>
+                    </div>
+        </div>
+
+        <!-- Slide 8: The Business Conversation -->
         <div class="slide">
             <div class="content">
                 <h2>The Business Conversation</h2>
@@ -322,22 +1266,20 @@
                     </div>
                     <div class="comparison-item">
                         <h4>✅ Our Approach</h4>
-                        <p>"Ship weekly"</p>
+                        <p>"Ship incrementally"</p>
                         <p>"Measure each step"</p>
-                        <p>"Prove value incrementally"</p>
+                        <p>"Prove value and gain confidence"</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Slide 4: Strategy -->
+        <!-- Slide 9: Strategy -->
         <div class="slide">
             <div class="content">
                 <h2>Migration Strategy</h2>
                 <div class="diagram">
-                    <div class="diagram-box">Modal</div>
-                    <span class="arrow">→</span>
-                    <div class="diagram-box">Route</div>
+                    <div class="diagram-box">Component</div>
                     <span class="arrow">→</span>
                     <div class="diagram-box">Page</div>
                     <span class="arrow">→</span>
@@ -371,7 +1313,7 @@
                         <div class="metric-label">Lighthouse Score</div>
                     </div>
                 </div>
-                <p style="font-size: 1.4rem; margin-top: 2rem; color: #999;">
+                <p style="font-size: clamp(1rem, 3vw, 1.4rem); margin-top: 2rem; color: #999;">
                     Focus on user-facing metrics, not just technical ones
                 </p>
             </div>
@@ -380,13 +1322,10 @@
         <!-- Slide 6: Technical Pattern 1 -->
         <div class="slide">
             <div class="content">
-                <h2>Pattern 1: Svelte in React</h2>
                 <h3>useSvelte Hook</h3>
+                <div class="pattern-demo-container">
                 <div class="code-block">
-                    <code class="code-loading" data-lang="tsx">// 1. Install dependencies
-pnpm add -D svelte @sveltejs/vite-plugin-svelte
-
-// 2. Create wrapper hook
+                        <code class="code-loading" data-lang="tsx">// 1. Create wrapper hook
 export default function useSvelte(Component: Component) {
   const svelteRef = useRef<HTMLDivElement>(null);
   
@@ -402,23 +1341,25 @@ export default function useSvelte(Component: Component) {
   };
 }
 
-// 3. Use with memo for performance
+// 2. Use memo() to prevent unnecessary remounts
+
 export default memo(function MyComponent(props) {
   const SvelteComponent = useSvelte(Component);
   return <SvelteComponent {...props} />;
 });</code>
                 </div>
-                <p class="highlight" style="margin-top: 2rem;">
-                    Key: Use memo() to prevent unnecessary remounts
-                </p>
+                    <div class="demo-gif-container">
+                        <img src="assets/svelte5-in-react-fixed.gif" alt="Svelte 5 in React Demo" class="demo-gif" />
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Slide 7: Technical Pattern 2 -->
         <div class="slide">
             <div class="content">
-                <h2>Pattern 2: React in SvelteKit</h2>
                 <h3>use-react.svelte Component</h3>
+                <div class="pattern-demo-container">
                 <div class="code-block">
                     <code class="code-loading" data-lang="svelte">&lt;script lang="ts"&gt;
   import { onMount } from "svelte";
@@ -437,58 +1378,15 @@ export default memo(function MyComponent(props) {
     
     return () => root?.unmount();
   });
-&lt;/script&gt;
-
-&lt;div bind:this={container}&gt;&lt;/div&gt;</code>
+&lt;/script&gt;</code>
                 </div>
-                <div class="code-block" style="margin-top: 1rem;">
-                    <code class="code-loading" data-lang="svelte">&lt;!-- Usage --&gt;
-&lt;script&gt;
-  import UseReact from './use-react.svelte'
-  import { Counter } from 'react-components'
-&lt;/script&gt;
-
-&lt;UseReact component={Counter} initCount={0} /&gt;</code>
+                    <div class="demo-gif-container">
+                        <img src="assets/react-in-sveltekit.gif" alt="React in SvelteKit Demo" class="demo-gif" />
                 </div>
+            </div>
             </div>
         </div>
 
-        <!-- Slide 8: State Management -->
-        <div class="slide">
-            <div class="content">
-                <h2>Modern State Pattern</h2>
-                <h3>Classes + Context + Runes</h3>
-                <div class="code-block">
-                    <code class="code-loading" data-lang="typescript">// my-state.svelte.ts
-import { FiniteStateMachine, watch, resource } from 'runed'
-
-export class MyState extends FiniteStateMachine<States, Events> {
-  readonly myResource: ResourceReturn
-  
-  constructor(getter: () => string) {
-    super("off", {
-      off: { toggle: "on" },
-      on: { toggle: "off" }
-    })
-    
-    // Use watch instead of $effect for better control
-    watch(getter, () => {})
-    
-    // Or use resource for async operations
-    this.myResource = resource(getter, async () => {})
-  }
-}
-
-// Context API for sharing
-const KEY = Symbol('my-state');
-export const setMyState = (g) => setContext(KEY, new MyState(g));
-export const getMyState = () => getContext&lt;MyState&gt;(KEY);</code>
-                </div>
-                <p style="margin-top: 2rem; color: #999;">
-                    Pattern inspired by @huntabyte's "Classes + Context"
-                </p>
-            </div>
-        </div>
 
         <!-- Slide 9: Challenges -->
         <div class="slide">
@@ -520,21 +1418,27 @@ export const getMyState = () => getContext&lt;MyState&gt;(KEY);</code>
             </div>
         </div>
 
-        <!-- Slide 11: Resources -->
+        <!-- Slide 11: Connect & Code -->
         <div class="slide">
             <div class="content">
-                <h2>Resources</h2>
-                <ul>
-                    <li>🔗 <span class="highlight">github.com/wd-David/react-svelte5</span></li>
-                    <li>📚 Official Svelte 5 Tutorial</li>
-                    <li>🎥 "Don't Sleep on Svelte 5" - @huntabyte</li>
-                    <li>🎓 "Svelte 5 Basics" - Syntax.fm</li>
-                    <li>🔄 Component Party - Side-by-side comparisons</li>
-                </ul>
-                <div class="section-divider"></div>
-                <p style="font-size: 1.4rem; margin-top: 2rem;">
-                    Twitter/X: @davipon | Bluesky: davipon.bsky.social
-                </p>
+                <h2>Connect & Code</h2>
+                <div class="personal-info-container">
+                    <div class="personal-section">
+                        <div class="avatar-container">
+                            <img src="assets/linkedin.jpg" alt="David's Avatar" class="avatar-image" />
+                        </div>
+                        <div class="social-links">
+                            <p>X: @davipon</p>
+                            <p>🦋 Bluesky: davipon.bsky.social</p>
+                        </div>
+                    </div>
+                    <div class="repo-section">
+                        <div class="repo-qr-container">
+                            <img src="assets/repo-link.png" alt="Repository QR Code" class="repo-qr" />
+                        </div>
+                        <p class="repo-text">Scan for code examples & documentation</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -544,27 +1448,32 @@ export const getMyState = () => getContext&lt;MyState&gt;(KEY);</code>
                 <h1>Questions?</h1>
                 <p class="subtitle">Let's discuss your migration challenges</p>
                 <div class="section-divider"></div>
-                <p style="font-size: 1.2rem; color: #999;">
+                <p style="font-size: clamp(1rem, 3vw, 1.2rem); color: #999;">
                     Remember: Technology migrations don't have to be all-or-nothing
                 </p>
             </div>
         </div>
     </div>
 
+    <!-- Touch-friendly swipe area -->
+    <div class="swipe-area" id="swipeArea"></div>
+
     <div class="navigation">
-        <button id="prevBtn">Previous</button>
-        <button id="nextBtn">Next</button>
+        <button id="prevBtn">←</button>
+        <button id="nextBtn">→</button>
     </div>
 
     <div class="slide-number">
-        <span id="currentSlide">1</span> / <span id="totalSlides">12</span>
+        <span id="currentSlide">1</span> / <span id="totalSlides">13</span>
     </div>
 
     <script>
-        // Slide navigation (non-module script for immediate execution)
+        // Slide navigation with touch support
         let currentSlide = 0;
         const slides = document.querySelectorAll('.slide');
         const totalSlides = slides.length;
+        let touchStartX = 0;
+        let touchEndX = 0;
 
         document.getElementById('totalSlides').textContent = totalSlides;
 
@@ -588,14 +1497,43 @@ export const getMyState = () => getContext&lt;MyState&gt;(KEY);</code>
             }
         }
 
+        // Touch/swipe navigation
+        function handleTouchStart(e) {
+            touchStartX = e.changedTouches[0].screenX;
+        }
+
+        function handleTouchEnd(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+            
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                    // Swipe left - next slide
+                    changeSlide(1);
+                } else {
+                    // Swipe right - previous slide
+                    changeSlide(-1);
+                }
+            }
+        }
+
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') changeSlide(-1);
             if (e.key === 'ArrowRight') changeSlide(1);
         });
 
-        // Button navigation
+        // Touch navigation
         document.addEventListener('DOMContentLoaded', () => {
+            const swipeArea = document.getElementById('swipeArea');
+            swipeArea.addEventListener('touchstart', handleTouchStart, { passive: true });
+            swipeArea.addEventListener('touchend', handleTouchEnd, { passive: true });
+            
             document.getElementById('prevBtn').addEventListener('click', () => changeSlide(-1));
             document.getElementById('nextBtn').addEventListener('click', () => changeSlide(1));
         });

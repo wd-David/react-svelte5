@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "pnpm --parallel dev",
+    "slides": "vite --config vite.config.html.js",
     "docker:start": "docker-compose down && set -o allexport; set +o allexport && docker image prune -f && docker-compose up --build -d > build.log 2>&1"
   },
   "packageManager": "pnpm@10.8.0",
@@ -10,5 +11,8 @@
     "onlyBuiltDependencies": [
       "esbuild"
     ]
+  },
+  "dependencies": {
+    "vite": "^7.0.6"
   }
 }
