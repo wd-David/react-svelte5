@@ -1094,7 +1094,7 @@
             right: 0;
             bottom: 0;
             z-index: 50;
-            pointer-events: none;
+            pointer-events: auto;
         }
         
         .swipe-area.active {
@@ -1497,21 +1497,48 @@ export default memo(function MyComponent(props) {
             }
         }
 
-        // Touch/swipe navigation
+        // Enhanced touch/swipe navigation
+        let touchStartY = 0;
+        let touchEndY = 0;
+        let isSwiping = false;
+        
         function handleTouchStart(e) {
             touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+            isSwiping = false;
+        }
+
+        function handleTouchMove(e) {
+            if (!isSwiping) {
+                const deltaX = Math.abs(e.changedTouches[0].screenX - touchStartX);
+                const deltaY = Math.abs(e.changedTouches[0].screenY - touchStartY);
+                
+                // Determine if this is a horizontal swipe (not vertical scroll)
+                if (deltaX > deltaY && deltaX > 10) {
+                    isSwiping = true;
+                    e.preventDefault(); // Prevent scrolling when swiping horizontally
+                }
+            } else {
+                e.preventDefault();
+            }
         }
 
         function handleTouchEnd(e) {
+            if (!isSwiping) return;
+            
             touchEndX = e.changedTouches[0].screenX;
+            touchEndY = e.changedTouches[0].screenY;
             handleSwipe();
         }
 
         function handleSwipe() {
             const swipeThreshold = 50;
+            const swipeVelocityThreshold = 30; // Minimum distance for a quick swipe
             const diff = touchStartX - touchEndX;
+            const verticalDiff = Math.abs(touchStartY - touchEndY);
             
-            if (Math.abs(diff) > swipeThreshold) {
+            // Only trigger swipe if horizontal movement is greater than vertical
+            if (Math.abs(diff) > swipeThreshold && Math.abs(diff) > verticalDiff) {
                 if (diff > 0) {
                     // Swipe left - next slide
                     changeSlide(1);
@@ -1519,7 +1546,16 @@ export default memo(function MyComponent(props) {
                     // Swipe right - previous slide
                     changeSlide(-1);
                 }
+            } else if (Math.abs(diff) > swipeVelocityThreshold && Math.abs(diff) > verticalDiff) {
+                // Allow for quicker, shorter swipes
+                if (diff > 0) {
+                    changeSlide(1);
+                } else {
+                    changeSlide(-1);
+                }
             }
+            
+            isSwiping = false;
         }
 
         // Keyboard navigation
@@ -1531,7 +1567,10 @@ export default memo(function MyComponent(props) {
         // Touch navigation
         document.addEventListener('DOMContentLoaded', () => {
             const swipeArea = document.getElementById('swipeArea');
+            // Ensure the swipe overlay accepts touch events
+            swipeArea.classList.add('active');
             swipeArea.addEventListener('touchstart', handleTouchStart, { passive: true });
+            swipeArea.addEventListener('touchmove', handleTouchMove, { passive: false });
             swipeArea.addEventListener('touchend', handleTouchEnd, { passive: true });
             
             document.getElementById('prevBtn').addEventListener('click', () => changeSlide(-1));
